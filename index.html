@@ -1499,7 +1499,12 @@ async function tinted(key,color){
   o.globalCompositeOperation='source-in';o.fillStyle=color;o.fillRect(0,0,oc.width,oc.height);
   /* เพิ่มความทึบของเส้นรูปฟัน ให้พิมพ์แล้วเห็นชัด */
   const id=o.getImageData(0,0,oc.width,oc.height),d=id.data;
-  for(let i=3;i<d.length;i+=4){if(d[i])d[i]=Math.min(255,d[i]*2.8+30);}
+  const W0=oc.width;
+  for(let y=0;y<oc.height;y++){
+    let cnt=0;for(let x=0;x<W0;x++)if(d[(y*W0+x)*4+3]>0)cnt++;
+    const grid=cnt>W0*0.9;   // เส้นสเกลแนวนอนเต็มความกว้าง: คงให้บางกว่าเส้นฟัน
+    for(let x=0;x<W0;x++){const i=(y*W0+x)*4+3;if(d[i])d[i]=grid?Math.min(255,d[i]*0.55):Math.min(255,d[i]*4.5+60);}
+  }
   o.putImageData(id,0,0);
   imgCache[ck]=oc;return oc;
 }
@@ -1519,26 +1524,27 @@ function wrapText(c,t,maxPx){
 }
 async function renderSummaryCanvas(mode){
   const bw=mode==='bw';
-  const C={red:bw?'#000':'#c62828',blue:bw?'#000':'#1a4fc4',alert:bw?'#000':'#b42318',fill:bw?'rgba(0,0,0,.08)':'rgba(31,95,209,.22)',tooth:bw?'#222':'#2f3a43',tick:bw?'rgba(0,0,0,.8)':'rgba(26,79,196,.45)'};
-  const PX=12,W=210,H=148,mL=6,mT=5,mB=5,mR=6;
+  const C={red:bw?'#000':'#c62828',blue:bw?'#000':'#1a4fc4',alert:bw?'#000':'#b42318',fill:bw?'rgba(0,0,0,.08)':'rgba(31,95,209,.22)',tooth:bw?'#000':'#10181d',tick:bw?'rgba(0,0,0,.8)':'rgba(26,79,196,.45)'};
+  const PX=12,W=210,H=148,mL=4,mT=4,mB=4,mR=4;
   const cv=document.createElement('canvas');cv.width=W*PX;cv.height=H*PX;
   const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);
   const FONT='"Noto Sans Thai","Sarabun","Leelawadee UI",Tahoma,system-ui,sans-serif';
   const MONO='ui-monospace,"SFMono-Regular",Menlo,Consolas,"Courier New",monospace';
-  const text=(t,x,y,o)=>{o=o||{};c.font=`${o.w||400} ${(o.size||1.8)*PX}px ${o.fam||FONT}`;c.textAlign=o.al||'left';c.textBaseline='middle';c.fillStyle=o.col||'#111';c.fillText(String(t),x*PX,y*PX);};
+  const text=(t,x,y,o)=>{o=o||{};c.font=`${o.w||400} ${(o.size||1.8)*PX}px ${o.fam||FONT}`;c.textAlign=o.al||'left';c.textBaseline='middle';c.fillStyle=o.col||'#000';c.fillText(String(t),x*PX,y*PX);};
   const line=(x1,y1,x2,y2,col,wmm)=>{c.beginPath();c.moveTo(x1*PX,y1*PX);c.lineTo(x2*PX,y2*PX);c.strokeStyle=col;c.lineWidth=wmm*PX;c.stroke();};
   try{await document.fonts.ready;}catch(_){}
 
   const ph=P();
   const hasF=[...ORDER.U,...ORDER.L].some(f=>Object.values(T(f).fu).some(v=>v!==''));
   const hasM=[...ORDER.U,...ORDER.L].some(f=>T(f).B.mgj!==''||T(f).L.mgj!=='');
-  const k0=8.4/TW,rh0=2.9;
   const FH=1.9,rowsTop=3+(hasF?FH:0),blockRows=3+(hasM?1:0);
-  let need=2*rowsTop*rh0;BLOCKS.forEach(b=>{need+=blockRows*rh0+GEO[b.key].H*k0;});
   const headH=9,footH=4,avail=H-mT-mB-headH-footH;
-  const s=Math.min(1,avail/need);
-  const SBW=40,LW=7*s,ky=8.4*s/TW,rh=rh0*s;   // SBW = ความกว้างแถบขวา (มม.)
-  const colW=Math.min((W-mL-mR-4-SBW-LW)/16,8.4*s*1.2),k=colW/TW;   // k = แนวนอน, ky = แนวตั้ง
+  const sumH=BLOCKS.reduce((a,b)=>a+GEO[b.key].H,0);
+  const rowsN=2*rowsTop+BLOCKS.length*blockRows;
+  const rh=Math.min(3.1,(avail-0.06*sumH)/rowsN);   // ความสูงแถวตัวเลข (มม.)
+  const ky=(avail-rowsN*rh)/sumH;                   // สัดส่วนแนวตั้งของรูปฟัน
+  const s=rh/2.9,LW=7.5;
+  const colW=(W-mL-mR-LW)/16,k=colW/TW;             // chart เต็มความกว้างกระดาษ
   const cx0=mL+LW,chartW=16*colW;
 
   // หัวกระดาษ
@@ -1552,15 +1558,15 @@ async function renderSummaryCanvas(mode){
 
   let y=mT+headH;
   const vgrid=(y0,y1)=>{
-    line(mL,y0,mL,y1,'#666',0.15);
-    line(cx0,y0,cx0,y1,'#666',0.15);
-    for(let i=1;i<=16;i++){const x=cx0+i*colW;line(x,y0,x,y1,i===8?'#111':'#7d8a91',i===8?0.4:0.15);}
-    line(cx0,y0,cx0,y1,'#666',0.15);
+    line(mL,y0,mL,y1,'#222',0.2);
+    line(cx0,y0,cx0,y1,'#222',0.2);
+    for(let i=1;i<=16;i++){const x=cx0+i*colW;line(x,y0,x,y1,i===8?'#111':'#3d474d',i===8?0.4:0.2);}
+    line(cx0,y0,cx0,y1,'#222',0.2);
     const xm=cx0+8*colW;line(xm,y0,xm,y1,'#111',0.4);
   };
-  const hline=yy=>line(mL,yy,cx0+chartW,yy,'#98a4aa',0.15);
-  const lab=(t,yy)=>text(t,cx0-0.8*s,yy+rh/2,{size:1.45*s,w:600,al:'right',col:'#333'});
-  const fsz=1.75*s;
+  const hline=yy=>line(mL,yy,cx0+chartW,yy,'#4d585e',0.2);
+  const lab=(t,yy)=>text(t,cx0-0.8*s,yy+rh/2,{size:rh*0.58,w:800,al:'right',col:'#000'});
+  const fsz=rh*0.8;
   const missLines=[];
   const colX=i=>cx0+i*colW;
 
@@ -1570,18 +1576,18 @@ async function renderSummaryCanvas(mode){
     const yr0=y;
     rows.forEach(([nm])=>{
       const rhh=nm==='F'?rh*FH:rh;
-      text(nm==='FDI'?'':nm,cx0-0.8*s,y+rhh/2,{size:1.45*s,w:600,al:'right',col:'#333'});
+      text(nm==='FDI'?'':nm,cx0-0.8*s,y+rhh/2,{size:rh*0.58,w:800,al:'right',col:'#000'});
       ORDER[arch].forEach((f,i)=>{
         const xc=colX(i)+colW/2,yc=y+rhh/2,t=T(f);
-        if(nm==='FDI')text(f,xc,yc,{size:fsz*1.05,w:700,al:'center',fam:MONO});
-        else if(nm==='Prog'&&t.prog)text(t.prog,xc,yc,{size:fsz,w:700,al:'center',fam:MONO});
-        else if(nm==='Mo'&&t.mo!=='')text(t.mo,xc,yc,{size:fsz,w:600,al:'center',fam:MONO});
+        if(nm==='FDI')text(f,xc,yc,{size:fsz*1.05,w:800,al:'center',fam:MONO});
+        else if(nm==='Prog'&&t.prog)text(t.prog,xc,yc,{size:fsz,w:800,al:'center',fam:MONO});
+        else if(nm==='Mo'&&t.mo!=='')text(t.mo,xc,yc,{size:fsz,w:800,al:'center',fam:MONO});
         else if(nm==='F'){
           const g=fuGeom(f);if(!g||t.missing)return;
           const x0=colX(i);
           g.lines.forEach(l=>line(x0+l[0]*colW,y+l[1]*rhh,x0+l[2]*colW,y+l[3]*rhh,'#222',0.18));
           fuSites(f).forEach(a=>{const v=t.fu[a];if(v===''||!g.pos[a])return;
-            text('F'+v,x0+g.pos[a][0]*colW,y+g.pos[a][1]*rhh,{size:fsz*0.78,w:+v>0?700:500,al:'center',fam:MONO,col:+v>0?'#111':'#777'});});
+            text('F'+v,x0+g.pos[a][0]*colW,y+g.pos[a][1]*rhh,{size:fsz*0.78,w:+v>0?700:500,al:'center',fam:MONO,col:'#000'});});
         }
       });
       y+=rhh;hline(y);
@@ -1597,11 +1603,11 @@ async function renderSummaryCanvas(mode){
       lab(nm,y);
       ORDER[b.arch].forEach((f,i)=>{
         const t=T(f)[b.surf];
-        if(nm==='MGJ'){if(t.mgj!=='')text(t.mgj,colX(i)+colW/2,y+rh/2,{size:fsz,w:600,al:'center',fam:MONO});}
+        if(nm==='MGJ'){if(t.mgj!=='')text(t.mgj,colX(i)+colW/2,y+rh/2,{size:fsz,w:800,al:'center',fam:MONO});}
         else if(nm==='CAL'){
           for(let q=0;q<3;q++){
             const cv=calcCAL(f,b.surf,q);if(cv==='')continue;
-            text(cv,colX(i)+colW*(q+.5)/3,y+rh/2,{size:fsz*.9,w:600,al:'center',fam:MONO,col:'#555'});
+            text(cv,colX(i)+colW*(q+.5)/3,y+rh/2,{size:fsz*.9,w:800,al:'center',fam:MONO,col:'#000'});
           }
         }else{
           const arr=nm==='PD'?t.pd:t.re;
@@ -1609,7 +1615,7 @@ async function renderSummaryCanvas(mode){
             const v=arr[q];if(v==='')continue;
             const bad=nm==='PD'&&+v>=5;
             const tx=colX(i)+colW*(q+.5)/3;
-            text(v,tx,y+rh/2,{size:fsz,w:(bw&&bad)?800:700,al:'center',fam:MONO,col:bad?C.alert:'#111'});
+            text(v,tx,y+rh/2,{size:fsz,w:800,al:'center',fam:MONO,col:'#000'});
             if(nm==='PD'&&+v>=6){c.beginPath();c.arc(tx*PX,(y+rh/2)*PX,Math.min(colW/3,rh)*0.5*PX,0,7);c.strokeStyle=C.alert;c.lineWidth=0.28*PX;c.stroke();}
           }
         }
@@ -1624,7 +1630,7 @@ async function renderSummaryCanvas(mode){
     const yAt=mm=>yi+(up?g.cej-mm*g.S:g.cej+mm*g.S)*ky;
     const clampY=v=>Math.max(yi+0.3,Math.min(yi+ih-0.3,v));
     // ตัวเลขมิลลิเมตร
-    [0,5,10,15].forEach(mm=>text(mm,cx0-0.8*s,clampY(yAt(mm)),{size:1.3*s,al:'right',col:'#444',fam:MONO}));
+    [0,5,10,15].forEach(mm=>text(mm,cx0-0.8*s,clampY(yAt(mm)),{size:rh*0.55,w:800,al:'right',col:'#000',fam:MONO}));
     line(cx0+8*colW,yi,cx0+8*colW,yi+ih,'#111',0.4);
     const toPx=p=>[(cx0+p.x*k)*PX,clampY(p.y)*PX];
     plotRuns(b.arch,b.surf).forEach(r=>{
@@ -1650,7 +1656,7 @@ async function renderSummaryCanvas(mode){
       r.forEach(p=>{c.beginPath();c.arc((cx0+p.x*k)*PX,clampY(yAt(p.gm))*PX,0.36*PX,0,7);c.fillStyle=C.red;c.fill();});
     });
     y+=ih;
-    line(mL,y,cx0+chartW,y,'#98a4aa',0.15);
+    line(mL,y,cx0+chartW,y,'#4d585e',0.2);
   }
   for(const arch of ['U','L']){
     const yTop=await drawArch(arch);
@@ -1658,43 +1664,6 @@ async function renderSummaryCanvas(mode){
     ORDER[arch].forEach((f,i)=>{if(T(f).missing)line(colX(i)+colW/2,yTop,colX(i)+colW/2,y,'#111',0.35);});
   }
 
-  // แถบด้านขวา
-  const sx=cx0+chartW+9,sw=W-mR-sx;
-  let sy=mT+headH+1.5;
-  const block=(title,body,opt)=>{
-    text(title,sx,sy,{size:2.3,w:700});sy+=2.4;
-    c.font=`400 ${2.1*PX}px ${FONT}`;
-    const lines=wrapText(c,body||'-',sw*PX);
-    const max=(opt&&opt.max)||6;
-    lines.slice(0,max).forEach(l=>{text(l,sx,sy+0.9,{size:2.1});sy+=2.5;});
-    sy+=1.2;
-  };
-  block('Diagnosis',(ph.dx||'')+(ph.stage?`${ph.dx?'  ':''}Stage ${ph.stage}`:''),{max:6});
-  const oName=PPROGS.find(p=>p.c===ph.overall);
-  text('Prognosis',sx,sy,{size:2.3,w:700});sy+=2.6;
-  text(`Overall: ${oName?oName.name:'-'}`,sx,sy,{size:2.1});sy+=3;
-  text('Individual',sx,sy,{size:2.1,w:600});sy+=2.7;
-  TPROGS.forEach(p=>{
-    const list=[...ORDER.U,...ORDER.L].filter(f=>T(f).prog===p.c&&!T(f).missing).sort((a,b)=>a-b);
-    c.font=`600 ${2*PX}px ${FONT}`;
-    const head=`${p.name}: `;
-    const hw=c.measureText(head).width/PX;
-    text(head,sx,sy,{size:2,w:600});
-    c.font=`400 ${2*PX}px ${MONO}`;
-    const lines=wrapText(c,list.length?list.join(' '):'-',(sw-hw)*PX);
-    if(!lines.length)lines.push('-');
-    lines.slice(0,3).forEach((l,i)=>{text(l,sx+(i===0?hw:2),sy,{size:2,fam:MONO});sy+=2.5;});
-    sy+=0.5;
-  });
-  sy+=1;
-  // คำอธิบายเส้น
-  const ly=Math.max(sy+1,H-mB-footH-14);
-  line(sx,ly,sx+6,ly,C.red,0.4);text('ขอบเหงือก (RE)',sx+7.5,ly,{size:1.8,col:'#333'});
-  c.setLineDash(bw?[1.2*PX,0.8*PX]:[]);line(sx,ly+3,sx+6,ly+3,C.blue,0.4);c.setLineDash([]);
-  text('CAL (RE + PD)',sx+7.5,ly+3,{size:1.8,col:'#333'});
-  line(sx+3,ly+5.4,sx+3,ly+8.2,C.alert,0.5);text('PD ตั้งแต่ 4 มม. ขีดแนวตั้ง',sx+7.5,ly+6.8,{size:1.8,col:'#333'});
-  c.beginPath();c.arc((sx+3)*PX,(ly+10.8)*PX,1.2*PX,0,7);c.strokeStyle=C.alert;c.lineWidth=0.28*PX;c.stroke();
-  text('PD ตั้งแต่ 6 มม. วงกลมที่ตัวเลข',sx+7.5,ly+10.8,{size:1.8,col:'#333'});
   return cv;
 }
 function makePdf(jpeg,w,h){
