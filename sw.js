@@ -1,6 +1,6 @@
 /* Service worker: ให้เปิดแอปได้แม้ไม่มีเน็ต และอัปเดตไฟล์เองเมื่อมีเน็ต
    เปลี่ยนเลขเวอร์ชันนี้ทุกครั้งที่อัปโหลด index.html ใหม่ เพื่อบังคับล้างแคชเก่า */
-const VERSION = 'perio-v1';
+const VERSION = 'perio-v2';
 const APP_FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

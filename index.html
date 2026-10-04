@@ -133,6 +133,13 @@ textarea{width:100%;min-height:74px;resize:vertical}
 .numbtn.wide{font-size:17px}
 .numbtn.neg{color:var(--warn);border-color:var(--warn)}
 .numbtn.act{font:600 14px var(--font);grid-column:span 1}
+.numbtn.pgb{display:none;min-height:60px;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.numbtn.pgb b{font:700 20px var(--mono)}
+.numbtn.pgb small{font:500 11px var(--font);color:var(--muted)}
+.numpad[data-mode="prog"]{grid-template-columns:repeat(4,minmax(0,1fr))}
+.numpad[data-mode="prog"] .numbtn:not(.pgb):not(.act){display:none}
+.numpad[data-mode="prog"] .pgb{display:flex}
+.numpad[data-mode="none"]{display:none}
 @media (max-width:520px){.numpad{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--muted);margin:6px 2px 10px}
 .legend span{display:inline-flex;align-items:center;gap:7px}
@@ -167,8 +174,15 @@ textarea{width:100%;min-height:74px;resize:vertical}
 .sc.cal{cursor:default;color:var(--muted);font-weight:700;background:var(--bg)}
 .sc.cal:hover{background:var(--bg)}
 .sc.cur{outline:2px solid var(--cur);outline-offset:-2px;background:var(--cur-soft);position:relative;z-index:1}
-.row.tall .sc{height:40px}
-.sc.fu{font-size:10.5px;line-height:1.1;white-space:normal;text-align:center;padding:0 2px}
+.row.tall .sc{height:44px}
+.sc.fu{padding:0;height:44px;display:block}
+.sc.fu svg{display:block;width:100%;height:100%}
+.sc.fu .fsl{stroke:var(--ink);stroke-width:1.2}
+.sc.fu .fst{font:600 11px var(--mono);fill:var(--muted)}
+.sc.fu .fst.nz{fill:var(--ink);font-weight:700}
+.sc.fu .fsact{fill:var(--cur-soft);stroke:var(--cur);stroke-width:1.5}
+.sc.ring{position:relative}
+.sc.ring::after{content:'';position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid var(--warn);border-radius:50%;pointer-events:none}
 .sc.pg.bad{color:var(--warn)}
 .tc.miss{background:linear-gradient(var(--ink),var(--ink)) center/2px 100% no-repeat,var(--miss)}
 .tc.miss .sc{pointer-events:none;opacity:.3}
@@ -222,7 +236,7 @@ ol.log{margin:0;padding-left:20px;font-size:13px;display:grid;gap:3px}
 
 <header class="top">
   <h1>บัตรตรวจสภาวะปริทันต์</h1>
-  <p>ฝ่ายทันตกรรม รพ.บางปะอิน บันทึกด้วยเสียง</p>
+  <p>บันทึกด้วยเสียง</p>
   <p id="cloudSync" class="cloudsync"></p>
   <p id="authBar" class="cloudsync"></p>
 </header>
@@ -250,6 +264,10 @@ ol.log{margin:0;padding-left:20px;font-size:13px;display:grid;gap:3px}
   </div>
   <div class="heard" id="heard">เลือกโซนและขั้นตอน แล้วกดเริ่มฟัง หรือกดช่องในตารางเพื่อเริ่มจากช่องนั้น</div>
   <div class="numpad" id="numpad">
+    <button class="numbtn pgb" data-a="numprog" data-c="F"><b>1 F</b><small>Favourable</small></button>
+    <button class="numbtn pgb" data-a="numprog" data-c="Q"><b>2 Q</b><small>Questionable</small></button>
+    <button class="numbtn pgb" data-a="numprog" data-c="U"><b>3 U</b><small>Unfavourable</small></button>
+    <button class="numbtn pgb" data-a="numprog" data-c="H"><b>4 H</b><small>Hopeless</small></button>
     <button class="numbtn" data-a="numval" data-v="0">0</button>
     <button class="numbtn" data-a="numval" data-v="1">1</button>
     <button class="numbtn" data-a="numval" data-v="2">2</button>
@@ -297,7 +315,7 @@ ol.log{margin:0;padding-left:20px;font-size:13px;display:grid;gap:3px}
       <li><b>ย้อนกลับ</b> ลบค่าล่าสุดและถอยหนึ่งช่อง</li>
       <li><b>ลบ หนึ่ง</b> ค่าติดลบ (เหงือกเกิน) ใน RE</li>
       <li><b>สิบ, สิบเอ็ด, สิบสอง</b> ค่า 10 ขึ้นไป</li>
-      <li>F: <b>ซี่ 16 เอ็มเอฟ สาม ดีเอฟ สอง</b> (MF DF BF LF)</li>
+      <li>F: พูดตัวเลขตามลำดับได้เลย (ซี่ 14 และ 15 = M แล้ว D, ฟันกรามบน = B, M, D, ฟันกรามล่าง = B, L) หรือระบุเอง <b>ซี่ 16 เอ็มเอฟ สาม ดีเอฟ สอง</b></li>
       <li>Prognosis: <b>1=Good 2=Fair 3=Poor 4=Questionable 5=Hopeless</b> หรือพูด <b>กู๊ด</b> / <b>แฟร์</b> / <b>พัวร์</b> / <b>ควอสชันนะเบิล</b> / <b>โฮปเลส</b> ตามด้วยเลขซี่ได้</li>
       <li><b>หยุดฟัง</b> ปิดไมค์</li>
     </ul>
@@ -681,6 +699,7 @@ function getV(f,surf,param,site){
   if(param==='mgj')return t[surf].mgj;
   if(param==='mo')return t.mo;
   if(param==='prog')return t.prog;
+  if(param==='fu')return t.fu[fuSites(f)[site]];
   return '';
 }
 function putV(f,surf,param,site,v){
@@ -689,6 +708,7 @@ function putV(f,surf,param,site,v){
   else if(param==='mgj')t[surf].mgj=v;
   else if(param==='mo')t.mo=v;
   else if(param==='prog')t.prog=v;
+  else if(param==='fu')t.fu[fuSites(f)[site]]=v;
 }
 
 /* เคอร์เซอร์ คือช่องที่กำลังรอรับค่า */
@@ -701,12 +721,44 @@ function stepList(){
   const s=[{p:'re',s:'B'},{p:'re',s:'L'},{p:'pd',s:'B'},{p:'pd',s:'L'},{p:'mo'}];
   if(state.opts.fu)s.push({p:'fu'});
   if(state.opts.mgj)s.push({p:'mgj',s:'B'});
+  s.push({p:'prog'});
   return s;
 }
 const stepLabel=s=>PNAME[s.p]+(s.s?(s.s==='B'?' แก้ม':' ลิ้น'):'');
 const surfOf=p=>(p==='re'||p==='pd'||p==='mgj');
 function curStepIdx(){
   return stepList().findIndex(s=>s.p===cursor.param&&(!s.s||s.s===cursor.surf));
+}
+/* F (furcation): ฟันบนซี่ 4-5 ใส่ M,D / ฟันกรามบน B,M,D / ฟันกรามล่าง B,L */
+function fuSites(f){
+  const d=f%10,up=quadOf(f)<=2;
+  if(up)return d<=5?['M','D']:['B','M','D'];
+  return ['B','L'];
+}
+const fuEligible=f=>{const d=f%10;return quadOf(f)<=2?(d===4||d>=6):d>=6;};
+/* รูปช่อง F แบบ normalized 0..1 : ฟันบน 14/24 เส้นตั้ง, กรามบนรูป Y, กรามล่างเส้นนอน; MF คือด้านใกล้ midline */
+function fuGeom(f){
+  if(!fuEligible(f))return null;
+  const q=quadOf(f),d=f%10,up=q<=2,mR=q===1;
+  if(up&&d===4)return {lines:[[.5,0,.5,1]],pos:{M:[mR?.75:.25,.5],D:[mR?.25:.75,.5]}};
+  if(up)return {lines:[[0,0,.5,.5],[1,0,.5,.5],[.5,.5,.5,1]],pos:{B:[.5,.24],M:[mR?.75:.25,.77],D:[mR?.25:.75,.77]}};
+  return {lines:[[0,.5,1,.5]],pos:{L:[.5,.25],B:[.5,.75]}};
+}
+let fuActive={f:null,site:-1};
+function fuCellHtml(f){
+  const g=fuGeom(f);if(!g)return '';
+  const W=90,Hh=44,fu=T(f).fu,sites=fuSites(f);
+  let o=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" height="100%" aria-hidden="true">`;
+  if(fuActive.f===f&&fuActive.site>=0){
+    const a=sites[fuActive.site],ps=g.pos[a];
+    if(ps)o+=`<rect class="fsact" x="${ps[0]*W-17}" y="${ps[1]*Hh-9}" width="34" height="18" rx="5"/>`;
+  }
+  g.lines.forEach(l=>{o+=`<line class="fsl" x1="${l[0]*W}" y1="${l[1]*Hh}" x2="${l[2]*W}" y2="${l[3]*Hh}"/>`;});
+  sites.forEach(a=>{
+    const v=fu[a];if(v===''||!g.pos[a])return;
+    o+=`<text class="fst${+v>0?' nz':''}" x="${g.pos[a][0]*W}" y="${g.pos[a][1]*Hh}" text-anchor="middle" dominant-baseline="central">F${v}</text>`;
+  });
+  return o+'</svg>';
 }
 function seqFor(q,param,surf){
   let teeth=midOrder(q).filter(f=>!T(f).missing);
@@ -720,15 +772,16 @@ function seqFor(q,param,surf){
     if(lingual)teeth=teeth.reverse();
     teeth.forEach(f=>seq.push({f,site:0}));
   }else{
-    if(param==='fu')teeth=teeth.filter(f=>{const d=f%10;return d>=6||(d===4&&q<=2);});
-    teeth.forEach(f=>seq.push({f,site:0}));
+    if(param==='fu'){
+      teeth.filter(fuEligible).forEach(f=>fuSites(f).forEach((a,k)=>seq.push({f,site:k})));
+    }else teeth.forEach(f=>seq.push({f,site:0}));
   }
   return seq;
 }
 const buildSeq=()=>seqFor(cursor.q,cursor.param,cursor.surf);
 const seqIndex=seq=>seq.findIndex(x=>x.f===cursor.tooth&&x.site===cursor.site);
 function isEmptyAtP(x,q,param,surf){
-  if(param==='fu'){const fu=T(x.f).fu;return !(fu.M!==''||fu.D!==''||fu.B!==''||fu.L!=='');}
+  if(param==='fu')return T(x.f).fu[fuSites(x.f)[x.site]]==='';
   return getV(x.f,surf,param,x.site)==='';
 }
 function goStart(){
@@ -880,7 +933,7 @@ function redraw(arch,surf){
         o+=`<path class="pdfill" d="${crFillPath(top,bot)}"/>`;
         o+=`<path class="pbline" fill="none" d="${crSvgPath(sg.map(p=>({x:p.x,y:yAt(p.pb)})))}"/>`;
       }
-      sg.forEach(p=>{const deep=(p.pb-p.gm)>=5;o+=`<line class="pdtick${deep?' deep':''}" x1="${p.x}" x2="${p.x}" y1="${yAt(p.gm)}" y2="${yAt(p.pb)}"/><circle class="dot-b" cx="${p.x}" cy="${yAt(p.pb)}" r="3"/>`;});
+      sg.forEach(p=>{const pdv=p.pb-p.gm,deep=pdv>=5;if(pdv>=4)o+=`<line class="pdtick${deep?' deep':''}" x1="${p.x}" x2="${p.x}" y1="${yAt(p.gm)}" y2="${yAt(p.pb)}"/>`;o+=`<circle class="dot-b" cx="${p.x}" cy="${yAt(p.pb)}" r="3"/>`;});
     });
     o+=`<path class="gmline" fill="none" d="${crSvgPath(r.map(p=>({x:p.x,y:yAt(p.gm)})))}"/>`;
     r.forEach(p=>{o+=`<circle class="dot-r" cx="${p.x}" cy="${yAt(p.gm)}" r="3"/>`;});
@@ -891,14 +944,18 @@ function redrawAll(){BLOCKS.forEach(b=>redraw(b.arch,b.surf));}
 
 /* ==================== อัปเดตหน้าจอ ==================== */
 function fuText(f){
-  const fu=T(f).fu;return ['M','D','B','L'].filter(a=>fu[a]!=='').map(a=>a+'F'+fu[a]).join(' ');
+  const fu=T(f).fu,sites=fuSites(f);
+  const asp=sites.concat(['M','D','B','L'].filter(a=>!sites.includes(a)&&fu[a]!==''));
+  if(!asp.some(a=>fu[a]!==''))return '';
+  return asp.map(a=>'F'+(fu[a]===''?'-':fu[a])).join('/');
 }
 function refreshCell(f,surf,param,site){
+  if(param==='fu'){const e=cells.get(`${f}|-|fu|0`);if(e)e.innerHTML=fuCellHtml(f);return;}
   const el=cells.get(`${f}|${surf||'-'}|${param}|${site}`);if(!el)return;
-  if(param==='fu'){el.textContent=fuText(f);return;}
   const v=getV(f,surf,param,site);
   el.textContent=v;
   el.classList.toggle('deep',param==='pd'&&v!==''&&+v>=5);
+  el.classList.toggle('ring',param==='pd'&&v!==''&&+v>=6);
   if(param==='prog')el.classList.toggle('bad',v==='Q'||v==='U'||v==='H');
 }
 function calcCAL(f,surf,site){
@@ -955,11 +1012,15 @@ function cursorKey(){
   return `${cursor.tooth}|${cursor.surf}|${p}|${cursor.site}`;
 }
 function renderCursor(){
+  {const prev=fuActive.f;
+   if(stage===4&&cursor.param==='fu'&&cursor.tooth&&!cursor.done)fuActive={f:cursor.tooth,site:cursor.site};else fuActive={f:null,site:-1};
+   if(prev&&prev!==fuActive.f)refreshCell(prev,null,'fu',0);
+   if(fuActive.f)refreshCell(fuActive.f,null,'fu',0);}
   document.querySelectorAll('.cur').forEach(e=>e.classList.remove('cur'));
   document.querySelectorAll('.colhl').forEach(h=>h.style.display='none');
   document.querySelectorAll('.block.active').forEach(b=>b.classList.remove('active'));
-  document.getElementById('chartIn').dataset.q=(stage===4||stage===5)?cursor.q:'';
-  if((stage===4||stage===5)&&cursor.tooth&&!cursor.done){
+  document.getElementById('chartIn').dataset.q=(stage===4)?cursor.q:'';
+  if((stage===4)&&cursor.tooth&&!cursor.done){
     const el=cells.get(cursorKey());
     if(el){el.classList.add('cur');el.scrollIntoView({block:'nearest',inline:'center'});}
     document.querySelectorAll(`.nums .tc[data-f="${cursor.tooth}"]`).forEach(e=>e.classList.add('cur'));
@@ -982,6 +1043,7 @@ function updateStatus(){
     const lab=SITELAB[quadOf(cursor.tooth)][cursor.site];
     s+=` ${SITETH[lab]}`;
   }
+  if(cursor.param==='fu')s+=` ${fuSites(cursor.tooth)[cursor.site]}`;
   if(i>=0)s+=` (${i+1}/${seq.length})`;
   w.textContent=s;
 }
@@ -1010,7 +1072,7 @@ function setCell(f,surf,param,site,v){
   putV(f,surf,param,site,String(v));
   refreshCell(f,surf,param,site);
   if(param==='pd'||param==='re'){redraw(archOf(f),surf);refreshCalCell(f,surf,site);}
-  if(param==='mgj')refreshOptsView();
+  if(param==='mgj'||param==='fu')refreshOptsView();
   pushHist(()=>{
     putV(f,surf,param,site,prev);refreshCell(f,surf,param,site);
     if(param==='pd'||param==='re'){redraw(archOf(f),surf);refreshCalCell(f,surf,site);}
@@ -1060,10 +1122,9 @@ function moveNextTooth(){
   if(nxt){cursor.tooth=nxt.f;cursor.site=nxt.site;cursor.done=false;}else cursor.done=true;
 }
 function afterSeqDone(){
-  if(cursor.param==='prog'){toast(`ครบ Prognosis ของ Q${cursor.q}`);renderStage();return;}
   const q=cursor.q;
   if(nextStep()){toast(`ต่อไป: ${stepLabel(stepList()[curStepIdx()])}`);renderStage();}
-  else{toast(`ตรวจ Q${q} ครบแล้ว ไปกรอก Prognosis`);setStage(5);}
+  else{toast(`ตรวจ Q${q} ครบแล้ว ไปกรอก Overall prognosis และ Diagnosis`);setStage(5);}
 }
 function applyValues(vals){
   const P_=cursor.param,rng=RANGE[P_],applied=[];let warn=null;
@@ -1092,7 +1153,7 @@ function setMissing(f,val){
   const t=T(f);if(t.missing===val)return;
   const snap={...cursor};
   t.missing=val;refreshTooth(f);redraw(archOf(f),'B');redraw(archOf(f),'L');
-  if(val&&cursor.tooth===f&&(stage===4||stage===5)){
+  if(val&&cursor.tooth===f&&stage===4){
     const seq=buildSeq();
     if(seq.length){const nx=seq[0];cursor.tooth=nx.f;cursor.site=nx.site;cursor.done=false;}else cursor.done=true;
   }
@@ -1124,8 +1185,7 @@ function handleUtterance(raw){
   let s=normalize(raw);const msgs=[];let bad=false;
   if(/(หยุดฟัง|stop listening)/.test(s)){stopListening();logAdd(raw,'ปิดไมค์',false);return;}
   if(/(ข้ามขั้น|ขั้นต่อไป|ขั้นถัดไป|next step)/.test(s)){
-    if(cursor.param==='prog'){toast('ขั้น Prognosis เป็นขั้นสุดท้ายของโซน');}
-    else if(nextStep()){renderStage();msgs.push('ไปขั้น '+stepLabel(stepList()[curStepIdx()]));}
+    if(nextStep()){renderStage();msgs.push('ไปขั้น '+stepLabel(stepList()[curStepIdx()]));}
     else setStage(5);
     logAdd(raw,msgs.join(', ')||'ไปขั้นถัดไป',false);return;
   }
@@ -1161,11 +1221,11 @@ function handleUtterance(raw){
       });
       renderCursor();updateStageLive();
       if(cursor.done&&ops.length)afterSeqDone();
-    }else if(cursor.param==='fu'||fuPairs.length){
-      if(!fuPairs.length&&!jm){msgs.push('ไม่พบค่า F (พูดเช่น เอ็มเอฟ สาม)');bad=true;}
+    }else if(fuPairs.length){
       fuPairs.forEach(p=>{
         if(p.v<0||p.v>3){msgs.push(`ค่า ${p.v} เกินช่วง F (0 ถึง 3)`);bad=true;return;}
         if(!cursor.tooth){msgs.push('ยังไม่ได้เลือกซี่');bad=true;return;}
+        if(!fuSites(cursor.tooth).includes(p.a)){msgs.push(`ซี่ ${cursor.tooth} ไม่มีช่อง ${p.a}F`);bad=true;return;}
         setFu(cursor.tooth,p.a,p.v);msgs.push(`ซี่ ${cursor.tooth} ${p.a}F${p.v}`);
       });
       if(fuPairs.length)say(fuPairs.map(p=>p.a+' '+p.v).join(' '));
@@ -1194,12 +1254,19 @@ function startListening(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){toast('เบราว์เซอร์นี้ไม่รองรับการรับเสียง ใช้ Chrome หรือ Edge หรือพิมพ์ในช่องคำสั่งแทน');return;}
   rec=new SR();rec.lang=settings.lang;rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;
+  lastFinalIdx=-1;pendingInterim='';
+  rec.onstart=()=>{lastFinalIdx=-1;pendingInterim='';};
   rec.onresult=e=>{
     let interim='';
     for(let i=e.resultIndex;i<e.results.length;i++){
       const r=e.results[i];
-      if(r.isFinal)handleUtterance(r[0].transcript);else interim+=r[0].transcript;
+      if(r.isFinal){
+        if(i<=lastFinalIdx)continue;      // ผลสุดท้ายที่เคยประมวลผลแล้ว (Chrome Android ส่งซ้ำ)
+        lastFinalIdx=i;pendingInterim='';
+        feedUtterance(r[0].transcript);
+      }else interim+=r[0].transcript;
     }
+    pendingInterim=interim;
     if(interim)document.getElementById('heard').innerHTML=`กำลังฟัง <b>${esc(interim)}</b>`;
   };
   rec.onerror=e=>{
@@ -1208,9 +1275,30 @@ function startListening(){
       toast('เบราว์เซอร์ไม่อนุญาตให้ใช้ไมโครโฟน ตรวจสิทธิ์ไมค์ของหน้านี้ หรือพิมพ์ในช่องคำสั่งแทน');
     }else if(e.error==='network'){toast('ต้องต่อเน็ตเพื่อถอดเสียง (Chrome ส่งเสียงไปถอดเสียงบนเซิร์ฟเวอร์)');}
   };
-  rec.onend=()=>{if(listening)setTimeout(()=>{try{rec.start();}catch(_){}},250);else setMicUi();};
+  rec.onend=()=>{
+    // เสียงที่ยังไม่ถูกสรุปเป็น final ตอนเซสชันถูกตัด ให้ใช้ค่านั้นแทนการทิ้ง (แก้ปัญหาฟังไม่ครบ)
+    if(pendingInterim){const t=pendingInterim;pendingInterim='';feedUtterance(t);}
+    if(listening)setTimeout(()=>{try{rec.start();}catch(_){}},60);else setMicUi();
+  };
   listening=true;setMicUi();
   try{rec.start();}catch(_){}
+}
+/* กันประโยคซ้ำ: Chrome (โดยเฉพาะ Android) ส่ง final เดิมซ้ำ หรือส่งแบบสะสม (ข้อความเก่า + ข้อความใหม่) */
+let lastFinalIdx=-1,pendingInterim='',lastFed={t:'',at:0};
+function feedUtterance(raw){
+  let t=normalize(raw||'');if(!t)return;
+  const now=Date.now(),prev=lastFed.t,fresh=now-lastFed.at<1500;
+  if(fresh&&prev){
+    if(t===prev){return;}                                   // ซ้ำเป๊ะ
+    if(t.startsWith(prev+' ')||(/^[\d\s-]+$/.test(t)&&t.replace(/\s/g,'').startsWith(prev.replace(/\s/g,''))&&t.length>prev.length)){
+      const rest=t.slice(prev.length).trim();               // สะสม: เอาเฉพาะส่วนที่เพิ่มมา
+      lastFed={t,at:now};
+      if(rest)handleUtterance(rest);
+      return;
+    }
+  }
+  lastFed={t,at:now};
+  handleUtterance(raw);
 }
 function stopListening(){
   listening=false;try{rec&&rec.stop();}catch(_){}setMicUi();
@@ -1234,6 +1322,19 @@ function qStatus(q){
 function stepDone(s){
   const seq=seqFor(cursor.q,s.p,s.s);
   return seq.length>0&&seq.every(x=>!isEmptyAtP(x,cursor.q,s.p,s.s));
+}
+function progPanelHtml(){
+  const cur=cursor.tooth&&!cursor.done;
+  if(!cur)return `<p class="hint">ครบ Prognosis รายซี่ของโซนนี้แล้ว</p>`;
+  const ct=T(cursor.tooth);
+  const sug=TPROGS.find(p=>p.c===toothSuggest(cursor.tooth));
+  return `<p class="hint">Prognosis ซี่ที่รอรับ <span class="curtooth" id="progTooth">${cursor.tooth}</span> พูดหรือกดปุ่ม 1=F 2=Q 3=U 4=H (พูดชื่อได้ เช่น ดี, ควอสชันนะเบิล, ไม่ดี, โฮปเลส) — แนะนำ: <b>${sug?sug.name:'-'}</b></p>
+  <div class="acts" style="margin-top:0"><button class="btn" data-a="progclear">ล้างค่าซี่นี้</button></div>
+  <div class="grp" style="margin-top:10px"><span>ข้อมูลเพิ่มเติมของซี่นี้ (ช่วยแนะนำ prognosis ตามเกณฑ์)</span>
+    <div class="fields">
+      ${Object.keys(FACTOR_OPTS).map(k=>`<label class="f">${FACTOR_LABEL[k]}
+        <select data-a="toothfac" data-k="${k}">${FACTOR_OPTS[k].map(o=>`<option value="${o.c}" ${ct[k]===o.c?'selected':''}>${esc(o.name)}</option>`).join('')}</select></label>`).join('')}
+    </div></div>`;
 }
 function stageHtml(){
   const ph=P();
@@ -1263,7 +1364,7 @@ function stageHtml(){
       <div class="qgrid">${(clinicsCache||[]).map(c=>`<button class="qbtn" data-a="pickClinic" data-id="${esc(c.id)}" data-name="${esc(c.name)}"><b>${esc(c.name)}</b></button>`).join('')}</div>
       ${clinicsCache===null?'<p class="note">กำลังโหลดรายชื่อคลินิก...</p>':(clinicsCache&&!clinicsCache.length?'<p class="note">ยังไม่มีคลินิกในระบบ เพิ่มคลินิกแรกด้านล่างได้เลย</p>':'')}
       <div class="fields" style="margin-top:10px">
-        <label class="f">เพิ่มคลินิกใหม่<input type="text" id="newClinic" placeholder="เช่น ฝ่ายทันตกรรม รพ.บางปะอิน"></label>
+        <label class="f">เพิ่มคลินิกใหม่<input type="text" id="newClinic" placeholder="เช่น บปอ (ตัวย่อชื่อคลินิก)"></label>
       </div>
       <div class="acts" style="margin-top:0"><button class="btn primary" data-a="addClinic">เพิ่ม/เลือกคลินิกนี้</button></div>`;
     }
@@ -1310,22 +1411,13 @@ function stageHtml(){
       <label><input type="checkbox" data-a="opt" data-o="mgj" ${state.opts.mgj?'checked':''}>ตรวจ MGJ</label>
     </div>
     <div class="grp"><span>เปลี่ยนโซน</span><div class="seg">${[1,2,3,4].map(q=>`<button data-a="qswitch" data-q="${q}" aria-pressed="${q===cursor.q}">Q${q}</button>`).join('')}</div></div>
-    <p class="hint">ลำดับ: ด้านแก้มเริ่มจากซี่กลาง (M, กลาง, D) ไปท้ายสุด แล้วด้านลิ้นวนกลับจากท้ายมาซี่กลาง (D, กลาง, M) ทำ RE ก่อน แล้ว PD ตามด้วย Mo (Mo ตรวจทิศทางเดียว ไม่วนกลับ) ส่วน MGJ ตรวจเฉพาะด้านแก้ม ด้านลิ้นไม่ตรวจ ใช้ปุ่มตัวเลขด้านบนกรอกแทนเสียงได้</p>`;}
+    ${cursor.param==='prog'?progPanelHtml():''}
+    <p class="hint">ลำดับ: ด้านแก้มเริ่มจากซี่กลาง (M, กลาง, D) ไปท้ายสุด แล้วด้านลิ้นวนกลับจากท้ายมาซี่กลาง (D, กลาง, M) ทำ RE ก่อน แล้ว PD ตามด้วย Mo (Mo ตรวจทิศทางเดียว ไม่วนกลับ) ถ้าเปิด F จะเริ่มที่ซี่ 4 ถึง 8 (ฟันบนซี่ 4 และ 5 ใส่ M แล้ว D, ฟันกรามบนใส่ B, M, D, ฟันกรามล่างใส่ B, L) แสดงเป็น F1/F1 ส่วน Prognosis รายซี่เป็นขั้นสุดท้าย (พูด 1 ถึง 4 หรือกดปุ่ม F Q U H) ส่วน MGJ ตรวจเฉพาะด้านแก้ม ด้านลิ้นไม่ตรวจ ใช้ปุ่มตัวเลขด้านบนกรอกแทนเสียงได้</p>`;}
   case 5: {
-    const cur=cursor.param==='prog'&&cursor.tooth&&!cursor.done;
-    const ct=cur?T(cursor.tooth):null;
-    const sug=cur?TPROGS.find(p=>p.c===toothSuggest(cursor.tooth)):null;
     const osug=PPROGS.find(p=>p.c===overallSuggest());
-    return `<h2>5. Prognosis Q${cursor.q} ${QNAME[cursor.q]}</h2>
-    <p class="hint">${cur?`ซี่ที่รอรับ <span class="curtooth" id="progTooth">${cursor.tooth}</span> แตะปุ่ม หรือพูด (1=Favourable ถึง 4=Hopeless) — แนะนำ: <b>${sug?sug.name:'-'}</b>`:'ครบทุกซี่ของโซนนี้แล้ว ข้ามไปโซนอื่นหรือไปสรุปได้'}</p>
-    <div class="pgrid">${TPROGS.map((p,i)=>`<button class="pbtn" data-a="prog" data-c="${p.c}"><b>${i+1} ${p.c}</b><small>${p.name}</small></button>`).join('')}</div>
-    <div class="acts" style="margin-top:0"><button class="btn" data-a="progclear">ล้างค่าซี่นี้</button></div>
-    ${cur?`<div class="grp" style="margin-top:10px"><span>ข้อมูลเพิ่มเติมของซี่นี้ (ใช้ช่วยแนะนำ prognosis ตามเกณฑ์)</span>
-      <div class="fields">
-        ${Object.keys(FACTOR_OPTS).map(k=>`<label class="f">${FACTOR_LABEL[k]}
-          <select data-a="toothfac" data-k="${k}">${FACTOR_OPTS[k].map(o=>`<option value="${o.c}" ${ct[k]===o.c?'selected':''}>${esc(o.name)}</option>`).join('')}</select></label>`).join('')}
-      </div></div>`:''}
-    <div class="grp" style="margin-top:14px"><span>Diagnosis stage (ตาม staging)</span><div class="seg">${STAGES.map(st=>`<button data-a="stage" data-st="${st}" aria-pressed="${ph.stage===st}">Stage ${st}</button>`).join('')}</div></div>
+    return `<h2>5. Overall prognosis และ Diagnosis</h2>
+    <p class="hint">Prognosis รายซี่ทำในขั้น 4 (หลัง Mo) แล้ว หน้านี้ใช้สรุปภาพรวมของผู้ป่วยทั้งปาก ไม่ใช่ของโซนใดโซนหนึ่ง</p>
+    <div class="grp"><span>Diagnosis stage (ตาม staging)</span><div class="seg">${STAGES.map(st=>`<button data-a="stage" data-st="${st}" aria-pressed="${ph.stage===st}">Stage ${st}</button>`).join('')}</div></div>
     <div class="checks">${SHIFTERS.map(sh=>`<label><input type="checkbox" data-a="shift" data-k="${sh.k}" ${ph.shifters&&ph.shifters[sh.k]?'checked':''}>${esc(sh.name)}</label>`).join('')}</div>
     <div class="grp"><span>Overall (patient-level) prognosis ${osug?`— แนะนำ: <b>${osug.name}</b>`:''}</span>
       <div class="seg">${PPROGS.map(p=>`<button data-a="overall" data-c="${p.c}" aria-pressed="${ph.overall===p.c}">${p.name}</button>`).join('')}</div>
@@ -1339,6 +1431,7 @@ function stageHtml(){
   case 6: return `<h2>6. สรุป 1 แผ่น (A5 แนวนอน)</h2>
     <p class="hint">HN ${esc(state.hn||'-')} วันที่ ${fmtDateTh(ph.date)} Phase ${state.phase}</p>
     <p class="note">${ph.printedAt?`✅ พิมพ์/ส่งออกล่าสุดเมื่อ ${esc(new Date(ph.printedAt).toLocaleString('th-TH'))}`:'ยังไม่เคยพิมพ์หรือส่งออก Phase นี้'}</p>
+    <div class="grp"><span>โหมดการพิมพ์</span><div class="seg"><button data-a="pmode" data-m="color" aria-pressed="${sum.mode==='color'}">พิมพ์สี</button><button data-a="pmode" data-m="bw" aria-pressed="${sum.mode==='bw'}">ขาวดำ (CAL เป็นเส้นประ)</button></div></div>
     <div class="acts" style="margin-top:0"><button class="btn primary" data-a="gen">สร้างสรุป</button></div>
     <div id="sumBox">${sum.url?sumHtml():''}</div>`;
   }
@@ -1364,6 +1457,8 @@ function renderStage(){
   document.getElementById('live').hidden=!(stage===4||stage===5);
 }
 function updateStageLive(){
+  const np=document.getElementById('numpad');
+  if(np)np.dataset.mode=stage!==4?'none':(cursor.param==='prog'?'prog':'num');
   const t=document.getElementById('progTooth');
   if(t&&cursor.tooth)t.textContent=cursor.tooth;
   if(stage===4){
@@ -1385,17 +1480,13 @@ function setStage(n,opt){
     else ensureExamParam();
     renderStage();
     if(!(opt&&opt.keep))goStart();
-  }else if(n===5){
-    cursor.param='prog';
-    renderStage();
-    if(!(opt&&opt.keep))goStart();
   }else renderStage();
   renderCursor();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
 /* ==================== สรุป 1 แผ่น และ PDF ==================== */
-const sum={url:null,blob:null,name:'',jpegUrl:null};
+const sum={url:null,blob:null,name:'',jpegUrl:null,mode:(()=>{try{return localStorage.getItem('perio-printmode')==='bw'?'bw':'color';}catch(_){return 'color';}})()};
 const imgCache={};
 function loadImg(src){
   return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});
@@ -1422,7 +1513,9 @@ function wrapText(c,t,maxPx){
   if(line)out.push(line);
   return out;
 }
-async function renderSummaryCanvas(){
+async function renderSummaryCanvas(mode){
+  const bw=mode==='bw';
+  const C={red:bw?'#000':'#c62828',blue:bw?'#000':'#1a4fc4',alert:bw?'#000':'#b42318',fill:bw?'rgba(0,0,0,.08)':'rgba(31,95,209,.16)',tooth:bw?'#555':'#5b6b75',tick:bw?'rgba(0,0,0,.8)':'rgba(26,79,196,.45)'};
   const PX=12,W=210,H=148,mL=6,mT=5,mB=5,mR=6;
   const cv=document.createElement('canvas');cv.width=W*PX;cv.height=H*PX;
   const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);
@@ -1436,19 +1529,21 @@ async function renderSummaryCanvas(){
   const hasF=[...ORDER.U,...ORDER.L].some(f=>Object.values(T(f).fu).some(v=>v!==''));
   const hasM=[...ORDER.U,...ORDER.L].some(f=>T(f).B.mgj!==''||T(f).L.mgj!=='');
   const k0=8.4/TW,rh0=2.9;
-  const rowsTop=3+(hasF?1:0),blockRows=3+(hasM?1:0);
+  const FH=1.9,rowsTop=3+(hasF?FH:0),blockRows=3+(hasM?1:0);
   let need=2*rowsTop*rh0;BLOCKS.forEach(b=>{need+=blockRows*rh0+GEO[b.key].H*k0;});
-  const headH=11,avail=H-mT-mB-headH;
+  const headH=9,footH=4,avail=H-mT-mB-headH-footH;
   const s=Math.min(1,avail/need);
   const colW=8.4*s,LW=7*s,k=colW/TW,rh=rh0*s;
   const cx0=mL+LW,chartW=16*colW;
 
   // หัวกระดาษ
   text('บัตรตรวจสภาวะปริทันต์',mL,mT+3,{size:3.8,w:600});
-  text('ฝ่ายทันตกรรม รพ.บางปะอิน',mL,mT+7.6,{size:2.2,col:'#444'});
-  text(`HN ${state.hn||'-'}`,W-mR,mT+3,{size:3.6,w:600,al:'right',fam:MONO});
-  text(`วันที่ ${fmtDateTh(ph.date)}   Phase: ${state.phase}`,W-mR,mT+7.6,{size:2.4,al:'right'});
-  line(mL,mT+headH-1.2,W-mR,mT+headH-1.2,'#111',0.3);
+  text(`วันที่ ${fmtDateTh(ph.date)}   Phase: ${state.phase}`,W-mR,mT+3,{size:2.4,al:'right'});
+  line(mL,mT+headH-1.6,W-mR,mT+headH-1.6,'#111',0.3);
+  // ท้ายกระดาษ: ชื่อคลินิก (ตัวย่อ) และ HN
+  const footY=H-mB-1.2;
+  line(mL,footY-2.3,W-mR,footY-2.3,'#bbb',0.12);
+  text(`${session.clinicName?session.clinicName+' · ':''}HN ${state.hn||'-'}`,mL,footY,{size:1.9,col:'#444'});
 
   let y=mT+headH;
   const vgrid=(y0,y1)=>{
@@ -1469,19 +1564,22 @@ async function renderSummaryCanvas(){
     const rows=[['FDI'],['Prog'],['Mo']];if(hasF)rows.push(['F']);
     const yr0=y;
     rows.forEach(([nm])=>{
-      lab(nm==='FDI'?'':nm,y);
+      const rhh=nm==='F'?rh*FH:rh;
+      text(nm==='FDI'?'':nm,cx0-0.8*s,y+rhh/2,{size:1.45*s,w:600,al:'right',col:'#555'});
       ORDER[arch].forEach((f,i)=>{
-        const xc=colX(i)+colW/2,yc=y+rh/2,t=T(f);
+        const xc=colX(i)+colW/2,yc=y+rhh/2,t=T(f);
         if(nm==='FDI')text(f,xc,yc,{size:fsz*1.05,w:700,al:'center',fam:MONO});
         else if(nm==='Prog'&&t.prog)text(t.prog,xc,yc,{size:fsz,w:700,al:'center',fam:MONO});
         else if(nm==='Mo'&&t.mo!=='')text(t.mo,xc,yc,{size:fsz,w:600,al:'center',fam:MONO});
         else if(nm==='F'){
-          const parts=['M','D','B','L'].filter(a=>t.fu[a]!=='').map(a=>a+'F'+t.fu[a]);
-          if(parts.length<=2)text(parts.join(' '),xc,yc,{size:fsz*.7,w:600,al:'center',fam:MONO});
-          else{text(parts.slice(0,2).join(' '),xc,y+rh*0.3,{size:fsz*.62,w:600,al:'center',fam:MONO});text(parts.slice(2).join(' '),xc,y+rh*0.72,{size:fsz*.62,w:600,al:'center',fam:MONO});}
+          const g=fuGeom(f);if(!g||t.missing)return;
+          const x0=colX(i);
+          g.lines.forEach(l=>line(x0+l[0]*colW,y+l[1]*rhh,x0+l[2]*colW,y+l[3]*rhh,'#222',0.18));
+          fuSites(f).forEach(a=>{const v=t.fu[a];if(v===''||!g.pos[a])return;
+            text('F'+v,x0+g.pos[a][0]*colW,y+g.pos[a][1]*rhh,{size:fsz*0.78,w:+v>0?700:500,al:'center',fam:MONO,col:+v>0?'#111':'#777'});});
         }
       });
-      y+=rh;hline(y);
+      y+=rhh;hline(y);
     });
     vgrid(yr0,y);
     return yTop;
@@ -1505,7 +1603,9 @@ async function renderSummaryCanvas(){
           for(let q=0;q<3;q++){
             const v=arr[q];if(v==='')continue;
             const bad=nm==='PD'&&+v>=5;
-            text(v,colX(i)+colW*(q+.5)/3,y+rh/2,{size:fsz,w:700,al:'center',fam:MONO,col:bad?'#b42318':'#111'});
+            const tx=colX(i)+colW*(q+.5)/3;
+            text(v,tx,y+rh/2,{size:fsz,w:(bw&&bad)?800:700,al:'center',fam:MONO,col:bad?C.alert:'#111'});
+            if(nm==='PD'&&+v>=6){c.beginPath();c.arc(tx*PX,(y+rh/2)*PX,Math.min(colW/3,rh)*0.5*PX,0,7);c.strokeStyle=C.alert;c.lineWidth=0.28*PX;c.stroke();}
           }
         }
       });
@@ -1514,7 +1614,7 @@ async function renderSummaryCanvas(){
     vgrid(yb0,y);
     // รูปฟัน
     const ih=g.H*k,yi=y;
-    const oc=await tinted(b.key,'#5b6b75');
+    const oc=await tinted(b.key,C.tooth);
     c.drawImage(oc,cx0*PX,yi*PX,chartW*PX,ih*PX);
     const yAt=mm=>yi+(up?g.cej-mm*g.S:g.cej+mm*g.S)*k;
     const clampY=v=>Math.max(yi+0.3,Math.min(yi+ih-0.3,v));
@@ -1526,20 +1626,23 @@ async function renderSummaryCanvas(){
       segsOf(r).forEach(sg=>{
         if(sg.length>1){
           const top=sg.map(p=>({x:p.x,y:yAt(p.gm)})),bot=sg.slice().reverse().map(p=>({x:p.x,y:yAt(p.pb)}));
-          c.beginPath();crCanvasFill(c,top,bot,toPx);c.fillStyle='rgba(31,95,209,.16)';c.fill();
+          c.beginPath();crCanvasFill(c,top,bot,toPx);c.fillStyle=C.fill;c.fill();
           c.beginPath();crCanvasStroke(c,sg.map(p=>({x:p.x,y:yAt(p.pb)})),toPx);
-          c.strokeStyle='#1a4fc4';c.lineWidth=0.32*PX;c.lineJoin='round';c.stroke();
+          c.strokeStyle=C.blue;c.lineWidth=0.32*PX;c.lineJoin='round';
+          if(bw)c.setLineDash([1.2*PX,0.8*PX]);c.stroke();c.setLineDash([]);
         }
         sg.forEach(p=>{
-          const deep=(p.pb-p.gm)>=5;
-          c.beginPath();c.moveTo((cx0+p.x*k)*PX,clampY(yAt(p.gm))*PX);c.lineTo((cx0+p.x*k)*PX,clampY(yAt(p.pb))*PX);
-          c.strokeStyle=deep?'#b42318':'rgba(26,79,196,.45)';c.lineWidth=(deep?0.5:0.16)*PX;c.stroke();
-          c.beginPath();c.arc((cx0+p.x*k)*PX,clampY(yAt(p.pb))*PX,0.36*PX,0,7);c.fillStyle=deep?'#b42318':'#1a4fc4';c.fill();
+          const pdv=p.pb-p.gm,deep=pdv>=5;
+          if(pdv>=4){
+            c.beginPath();c.moveTo((cx0+p.x*k)*PX,clampY(yAt(p.gm))*PX);c.lineTo((cx0+p.x*k)*PX,clampY(yAt(p.pb))*PX);
+            c.strokeStyle=deep?C.alert:C.tick;c.lineWidth=(deep?0.5:0.16)*PX;c.stroke();
+          }
+          c.beginPath();c.arc((cx0+p.x*k)*PX,clampY(yAt(p.pb))*PX,0.36*PX,0,7);c.fillStyle=deep?C.alert:C.blue;c.fill();
         });
       });
       c.beginPath();crCanvasStroke(c,r.map(p=>({x:p.x,y:yAt(p.gm)})),toPx);
-      c.strokeStyle='#c62828';c.lineWidth=0.32*PX;c.lineJoin='round';c.stroke();
-      r.forEach(p=>{c.beginPath();c.arc((cx0+p.x*k)*PX,clampY(yAt(p.gm))*PX,0.36*PX,0,7);c.fillStyle='#c62828';c.fill();});
+      c.strokeStyle=C.red;c.lineWidth=0.32*PX;c.lineJoin='round';c.stroke();
+      r.forEach(p=>{c.beginPath();c.arc((cx0+p.x*k)*PX,clampY(yAt(p.gm))*PX,0.36*PX,0,7);c.fillStyle=C.red;c.fill();});
     });
     y+=ih;
     line(mL,y,cx0+chartW,y,'#c7ced2',0.12);
@@ -1561,10 +1664,10 @@ async function renderSummaryCanvas(){
     lines.slice(0,max).forEach(l=>{text(l,sx,sy+0.9,{size:2.1});sy+=2.5;});
     sy+=1.2;
   };
-  block('Diagnosis',ph.dx,{max:6});
+  block('Diagnosis',(ph.dx||'')+(ph.stage?`${ph.dx?'  ':''}Stage ${ph.stage}`:''),{max:6});
   const oName=PPROGS.find(p=>p.c===ph.overall);
   text('Prognosis',sx,sy,{size:2.3,w:700});sy+=2.6;
-  text(`Overall: ${oName?oName.name:'-'}${ph.stage?' (Stage '+ph.stage+')':''}`,sx,sy,{size:2.1});sy+=3;
+  text(`Overall: ${oName?oName.name:'-'}`,sx,sy,{size:2.1});sy+=3;
   text('Individual',sx,sy,{size:2.1,w:600});sy+=2.7;
   TPROGS.forEach(p=>{
     const list=[...ORDER.U,...ORDER.L].filter(f=>T(f).prog===p.c&&!T(f).missing).sort((a,b)=>a-b);
@@ -1579,19 +1682,14 @@ async function renderSummaryCanvas(){
     sy+=0.5;
   });
   sy+=1;
-  const missAll=[...ORDER.U,...ORDER.L].filter(f=>T(f).missing).sort((a,b)=>a-b);
-  if(missAll.length){
-    text('ซี่ที่หายหรือไม่ตรวจ',sx,sy,{size:2.1,w:600});sy+=2.6;
-    c.font=`400 ${2*PX}px ${MONO}`;
-    wrapText(c,missAll.join(' '),sw*PX).slice(0,3).forEach(l=>{text(l,sx,sy,{size:2,fam:MONO});sy+=2.5;});
-    sy+=1;
-  }
   // คำอธิบายเส้น
-  const ly=Math.max(sy+1,H-mB-13);
-  line(sx,ly,sx+6,ly,'#c62828',0.4);text('ขอบเหงือก (RE)',sx+7.5,ly,{size:1.8,col:'#333'});
-  line(sx,ly+3,sx+6,ly+3,'#1a4fc4',0.4);text('ก้นร่อง (RE + PD)',sx+7.5,ly+3,{size:1.8,col:'#333'});
-  text('PD ตั้งแต่ 5 มม. ขึ้นไปเป็นสีแดง',sx,ly+6,{size:1.6,col:'#555'});
-  text('เส้นดิ่งที่ซี่ = ฟันหาย/ไม่ตรวจ',sx,ly+9,{size:1.6,col:'#555'});
+  const ly=Math.max(sy+1,H-mB-footH-14);
+  line(sx,ly,sx+6,ly,C.red,0.4);text('ขอบเหงือก (RE)',sx+7.5,ly,{size:1.8,col:'#333'});
+  c.setLineDash(bw?[1.2*PX,0.8*PX]:[]);line(sx,ly+3,sx+6,ly+3,C.blue,0.4);c.setLineDash([]);
+  text('CAL (RE + PD)',sx+7.5,ly+3,{size:1.8,col:'#333'});
+  line(sx+3,ly+5.4,sx+3,ly+8.2,C.alert,0.5);text('PD ตั้งแต่ 4 มม. ขีดแนวตั้ง',sx+7.5,ly+6.8,{size:1.8,col:'#333'});
+  c.beginPath();c.arc((sx+3)*PX,(ly+10.8)*PX,1.2*PX,0,7);c.strokeStyle=C.alert;c.lineWidth=0.28*PX;c.stroke();
+  text('PD ตั้งแต่ 6 มม. วงกลมที่ตัวเลข',sx+7.5,ly+10.8,{size:1.8,col:'#333'});
   return cv;
 }
 function makePdf(jpeg,w,h){
@@ -1616,14 +1714,14 @@ async function generateSummary(){
   const box=document.getElementById('sumBox');
   if(box)box.innerHTML='<p class="note">กำลังสร้าง...</p>';
   try{
-    const cv=await renderSummaryCanvas();
+    const cv=await renderSummaryCanvas(sum.mode);
     const jb=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.92));
     const bytes=new Uint8Array(await jb.arrayBuffer());
     if(sum.url)URL.revokeObjectURL(sum.url);
     sum.url=URL.createObjectURL(jb);
     sum.blob=makePdf(bytes,cv.width,cv.height);
     const safe=s=>String(s||'').replace(/[^\w\-]+/g,'_').replace(/^_+|_+$/g,'');
-    sum.name=`Perio_${safe(state.hn)||'noHN'}_${state.phase}_${P().date||todayIso()}.pdf`;
+    sum.name=`Perio_${safe(state.hn)||'noHN'}_${state.phase}_${P().date||todayIso()}${sum.mode==='bw'?'_BW':''}.pdf`;
     if(box)box.innerHTML=sumHtml();
   }catch(e){
     if(box)box.innerHTML='<p class="note">สร้างสรุปไม่สำเร็จ ลองอีกครั้ง</p>';
@@ -1749,6 +1847,7 @@ function act(a,el){
   case 'dict':{
     if(dictTarget){dictTarget=null;renderStage();break;}
     dictTarget='dx';renderStage();if(!listening)startListening();break;}
+  case 'pmode':{sum.mode=el.dataset.m;try{localStorage.setItem('perio-printmode',sum.mode);}catch(_){}renderStage();if(sum.url)generateSummary();break;}
   case 'gen': generateSummary();break;
   case 'share': sharePdf();break;
   case 'download': downloadPdf();break;
@@ -1785,8 +1884,13 @@ function bind(){
   document.getElementById('numpad').addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b)return;
     const a=b.dataset.a;
-    if(a==='numval'){
-      if(cursor.param==='prog'){toast('ขั้นนี้ใช้ปุ่ม Prognosis ด้านล่างแทน');return;}
+    if(a==='numprog'){
+      if(!cursor.tooth||cursor.done){toast('เลือกซี่จากตารางก่อน');return;}
+      const f=cursor.tooth;setProg(f,b.dataset.c);moveNextTooth();renderCursor();
+      logAdd('(ปุ่ม)',`Prognosis ซี่ ${f} = ${b.dataset.c}`,false);
+      if(cursor.done)afterSeqDone();
+    }else if(a==='numval'){
+      if(cursor.param==='prog'){toast('ขั้นนี้ใช้ปุ่ม 1 ถึง 4 (F Q U H)');return;}
       const v=+b.dataset.v;
       const r=applyValues([v]);
       if(r.applied.length){logAdd('(ปุ่มเลข)',`${PNAME[cursor.param]||''} ${v}`,false);say(String(v));}
@@ -1805,11 +1909,13 @@ function bind(){
     const sc=e.target.closest('.sc');
     if(sc&&sc.dataset.param&&!sc.closest('.tc.miss')){
       const p=sc.dataset.param,f=+sc.dataset.f;
+      if(p==='fu'&&!fuEligible(f)){toast('ซี่นี้ไม่มีช่อง F');return;}
       cursor.param=p;cursor.q=quadOf(f);
       if(sc.dataset.surf)cursor.surf=sc.dataset.surf;
       cursor.tooth=f;cursor.site=+sc.dataset.site||0;cursor.done=false;
-      if(p==='prog'){if(stage!==5)setStage(5,{keep:true});}
-      else if(stage!==4)setStage(4,{keep:true});
+      if(p==='fu'){const g=fuGeom(f),r=sc.getBoundingClientRect(),nx=(e.clientX-r.left)/r.width,ny=(e.clientY-r.top)/r.height;
+        let best=0,bd=9;fuSites(f).forEach((a,k)=>{const q=g.pos[a],dd=(q[0]-nx)**2+(q[1]-ny)**2;if(dd<bd){bd=dd;best=k;}});cursor.site=best;}
+      if(stage!==4)setStage(4,{keep:true});
       renderCursor();renderStage();return;
     }
     const nm=e.target.closest('.nums .tc');
