@@ -520,8 +520,7 @@ function wrapFirestore(fs,fdb){
       /* ถ้าออฟไลน์ การเขียนจะค้างในคิวและซิงก์เองภายหลัง จึงไม่รอเกิน 4 วินาที */
       await Promise.race([fs.setDoc(fs.doc(fdb,path),clean(d)),new Promise(r=>setTimeout(r,4000))]);
     },
-    async update(d){await fs.updateDoc(fs.doc(fdb,path),clean(d));},
-    async delete(){await fs.deleteDoc(fs.doc(fdb,path));}
+    async update(d){await fs.updateDoc(fs.doc(fdb,path),clean(d));}
   });
   const mkColl=(path,cons)=>({
     doc(id){return mkDoc(path+'/'+id);},
@@ -574,6 +573,25 @@ async function signInGoogle(){
     }
   }
 }
+/* ล็อกอินด้วยชื่อผู้ใช้: แปลงชื่อผู้ใช้เป็นอีเมลภายใน เช่น art -> art@perio-chart-4eb9c.firebaseapp.com */
+const LOGIN_DOMAIN='perio-chart-4eb9c.firebaseapp.com';
+function userToEmail(u){u=String(u||'').trim().toLowerCase();return u.includes('@')?u:u+'@'+LOGIN_DOMAIN;}
+async function signInPassword(){
+  if(!fbMods){toast('ยังเชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง');return;}
+  const uEl=document.getElementById('loginUser'),pEl=document.getElementById('loginPw');
+  const u=uEl?uEl.value:'',pw=pEl?pEl.value:'';
+  if(!u.trim()||!pw){toast('กรอกชื่อผู้ใช้และรหัสผ่าน');return;}
+  try{await fbMods.authM.signInWithEmailAndPassword(fbAuth,userToEmail(u),pw);if(pEl)pEl.value='';}
+  catch(e){
+    const c=e&&e.code;
+    if(c==='auth/invalid-credential'||c==='auth/wrong-password'||c==='auth/user-not-found'||c==='auth/invalid-email')toast('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+    else if(c==='auth/too-many-requests')toast('ลองผิดหลายครั้งเกินไป รอสักครู่แล้วลองใหม่');
+    else toast('เข้าสู่ระบบไม่สำเร็จ: '+(c||''));
+  }
+}
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Enter'&&ev.target&&(ev.target.id==='loginUser'||ev.target.id==='loginPw')){ev.preventDefault();signInPassword();}
+});
 async function signOutGoogle(){
   if(!fbMods)return;
   try{await fbMods.authM.signOut(fbAuth);}catch(_){}
@@ -584,7 +602,7 @@ function renderAuthBar(){
   const el=document.getElementById('authBar');if(!el)return;
   el.textContent='';
   if(fbUser&&(cloudState==='ready'||cloudState==='denied')){
-    const sp=document.createElement('span');sp.textContent='👤 '+(fbUser.email||'')+' ';
+    const sp=document.createElement('span');sp.textContent='👤 '+String(fbUser.email||'').replace('@'+LOGIN_DOMAIN,'')+' ';
     const b=document.createElement('button');b.className='btn';b.textContent='ออกจากระบบ';b.addEventListener('click',signOutGoogle);
     el.appendChild(sp);el.appendChild(b);
   }
@@ -1361,8 +1379,14 @@ function stageHtml(){
   case 1: {
     if(cloudState==='checking')return `<h2>1. ข้อมูลผู้ป่วย</h2><p class="hint">กำลังเชื่อมต่อคลังข้อมูลกลาง...</p>`;
     if(cloudState==='signedout')return `<h2>1. เข้าสู่ระบบ</h2>
-      <p class="hint">เข้าสู่ระบบด้วยบัญชี Google ที่ได้รับอนุญาต เพื่อเปิดข้อมูลคนไข้จากคลังข้อมูลกลาง</p>
-      <div class="acts" style="margin-top:0"><button class="btn primary" data-a="signin">เข้าสู่ระบบด้วย Google</button>
+      <p class="hint">เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน หรือบัญชี Google ที่ได้รับอนุญาต เพื่อเปิดข้อมูลคนไข้จากคลังข้อมูลกลาง</p>
+      <div class="fields" style="max-width:420px">
+        <label class="f">ชื่อผู้ใช้<input id="loginUser" type="text" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+        <label class="f">รหัสผ่าน<input id="loginPw" type="password" autocomplete="current-password"></label>
+      </div>
+      <div class="acts"><button class="btn primary" data-a="signinPw">เข้าสู่ระบบ</button></div>
+      <p class="hint" style="margin-top:14px">หรือ</p>
+      <div class="acts" style="margin-top:0"><button class="btn" data-a="signin">เข้าสู่ระบบด้วย Google</button>
       <button class="btn" data-a="useOffline">ใช้แบบออฟไลน์ในเครื่องนี้</button></div>`;
     if(cloudState==='denied')return `<h2>1. ไม่มีสิทธิ์เข้าถึงข้อมูล</h2>
       <p class="hint">บัญชี <b>${esc((fbUser&&fbUser.email)||'')}</b> ยังไม่ได้รับอนุญาตให้เปิดข้อมูลคนไข้ ติดต่อผู้ดูแลระบบเพื่อเพิ่มอีเมลนี้ หรือออกจากระบบแล้วใช้บัญชีอื่น</p>
@@ -1798,7 +1822,7 @@ function act(a,el){
     const hn=state.hn,ref=session.patientRef,cid=session.clinicId;
     clearTimeout(saveTimer);clearTimeout(cloudSaveTimer);   // กันตัวบันทึกอัตโนมัติเขียนกลับหลังลบ
     el.disabled=true;el.textContent='กำลังลบ...';
-    Promise.resolve().then(()=>ref.delete()).then(()=>{
+    ref.delete().then(()=>{
       try{localStorage.removeItem('perio-cache-'+cid+'-'+hnDocId(hn));}catch(_){}
       session.hn='';session.patientRef=null;patientsCache=null;
       state=defaultState();P().date=todayIso();
@@ -1811,6 +1835,7 @@ function act(a,el){
     });
     break;}
   case 'signin': signInGoogle();break;
+  case 'signinPw': signInPassword();break;
   case 'signout': signOutGoogle();break;
   case 'useOffline': cloudState='offline';setCloudSyncUi('offline');renderStage();break;
   case 'pickClinic':{
