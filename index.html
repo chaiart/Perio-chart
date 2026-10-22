@@ -520,7 +520,11 @@ function wrapFirestore(fs,fdb){
       /* ถ้าออฟไลน์ การเขียนจะค้างในคิวและซิงก์เองภายหลัง จึงไม่รอเกิน 4 วินาที */
       await Promise.race([fs.setDoc(fs.doc(fdb,path),clean(d)),new Promise(r=>setTimeout(r,4000))]);
     },
-    async update(d){await fs.updateDoc(fs.doc(fdb,path),clean(d));}
+    async update(d){await fs.updateDoc(fs.doc(fdb,path),clean(d));},
+    async delete(){
+      /* เหมือน set: ถ้าออฟไลน์ คำสั่งลบจะค้างในคิวและซิงก์เองภายหลัง จึงไม่รอเกิน 4 วินาที */
+      await Promise.race([fs.deleteDoc(fs.doc(fdb,path)),new Promise(r=>setTimeout(r,4000))]);
+    }
   });
   const mkColl=(path,cons)=>({
     doc(id){return mkDoc(path+'/'+id);},
@@ -1822,7 +1826,7 @@ function act(a,el){
     const hn=state.hn,ref=session.patientRef,cid=session.clinicId;
     clearTimeout(saveTimer);clearTimeout(cloudSaveTimer);   // กันตัวบันทึกอัตโนมัติเขียนกลับหลังลบ
     el.disabled=true;el.textContent='กำลังลบ...';
-    ref.delete().then(()=>{
+    Promise.resolve().then(()=>ref.delete()).then(()=>{
       try{localStorage.removeItem('perio-cache-'+cid+'-'+hnDocId(hn));}catch(_){}
       session.hn='';session.patientRef=null;patientsCache=null;
       state=defaultState();P().date=todayIso();
