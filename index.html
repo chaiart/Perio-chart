@@ -216,6 +216,7 @@ ol.log{margin:0;padding-left:20px;font-size:13px;display:grid;gap:3px}
   background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:14px;z-index:50;
   max-width:min(92vw,560px);opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.show{opacity:1}
+button,.numbtn,.qbtn,.sc,.seg button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 #printSheet{display:none}
 @media (max-width:700px){
   .wrap{padding:0 10px 40px}
@@ -519,7 +520,8 @@ function wrapFirestore(fs,fdb){
       /* ถ้าออฟไลน์ การเขียนจะค้างในคิวและซิงก์เองภายหลัง จึงไม่รอเกิน 4 วินาที */
       await Promise.race([fs.setDoc(fs.doc(fdb,path),clean(d)),new Promise(r=>setTimeout(r,4000))]);
     },
-    async update(d){await fs.updateDoc(fs.doc(fdb,path),clean(d));}
+    async update(d){await fs.updateDoc(fs.doc(fdb,path),clean(d));},
+    async delete(){await fs.deleteDoc(fs.doc(fdb,path));}
   });
   const mkColl=(path,cons)=>({
     doc(id){return mkDoc(path+'/'+id);},
@@ -1061,7 +1063,14 @@ function logAdd(heard,result,bad){
 }
 function say(txt){
   if(!settings.tts||!('speechSynthesis' in window))return;
-  try{const u=new SpeechSynthesisUtterance(txt);u.lang=settings.lang;speechSynthesis.speak(u);}catch(_){}
+  try{
+    speechSynthesis.cancel();                                  // ไม่ต่อคิวเสียงค้าง
+    const u=new SpeechSynthesisUtterance(txt);u.lang=settings.lang;
+    const hold=()=>{ttsUntil=Date.now()+900;};                 // หน่วงหลังพูดจบ กันไมค์ได้ยินเสียงท้าย
+    u.onend=hold;u.onerror=hold;
+    ttsUntil=Date.now()+1500+String(txt).length*400;          // ระหว่างระบบพูด ไมค์ไม่รับคำสั่ง
+    speechSynthesis.speak(u);
+  }catch(_){}
 }
 
 /* ==================== การแก้ไขข้อมูล ==================== */
@@ -1253,38 +1262,48 @@ function setMicUi(){
 function startListening(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){toast('เบราว์เซอร์นี้ไม่รองรับการรับเสียง ใช้ Chrome หรือ Edge หรือพิมพ์ในช่องคำสั่งแทน');return;}
-  rec=new SR();rec.lang=settings.lang;rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;
+  // ปิดตัวฟังเก่าให้หมดก่อน กันมีตัวฟังซ้อนกัน 2 ตัวแล้วส่งข้อมูลซ้ำ
+  if(rec){try{rec.onresult=rec.onend=rec.onerror=rec.onstart=null;rec.abort();}catch(_){}rec=null;}
+  const gen=++recGen,r=new SR();rec=r;
+  r.lang=settings.lang;r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
   lastFinalIdx=-1;pendingInterim='';
-  rec.onstart=()=>{lastFinalIdx=-1;pendingInterim='';};
-  rec.onresult=e=>{
+  r.onstart=()=>{if(gen!==recGen)return;lastFinalIdx=-1;pendingInterim='';};
+  r.onresult=e=>{
+    if(gen!==recGen)return;                 // เหตุการณ์จากตัวฟังเก่า ทิ้ง
+    const muted=micMuted();
     let interim='';
     for(let i=e.resultIndex;i<e.results.length;i++){
-      const r=e.results[i];
-      if(r.isFinal){
-        if(i<=lastFinalIdx)continue;      // ผลสุดท้ายที่เคยประมวลผลแล้ว (Chrome Android ส่งซ้ำ)
+      const x=e.results[i];
+      if(x.isFinal){
+        if(i<=lastFinalIdx)continue;        // ผลสุดท้ายที่เคยประมวลผลแล้ว (Chrome Android ส่งซ้ำ)
         lastFinalIdx=i;pendingInterim='';
-        feedUtterance(r[0].transcript);
-      }else interim+=r[0].transcript;
+        if(muted)continue;                  // เสียงทวนของระบบเอง ไม่ใช่คำสั่ง
+        feedUtterance(x[0].transcript);
+      }else interim+=x[0].transcript;
     }
-    pendingInterim=interim;
-    if(interim)document.getElementById('heard').innerHTML=`กำลังฟัง <b>${esc(interim)}</b>`;
+    pendingInterim=muted?'':interim;
+    if(interim&&!muted)document.getElementById('heard').innerHTML=`กำลังฟัง <b>${esc(interim)}</b>`;
   };
-  rec.onerror=e=>{
+  r.onerror=e=>{
+    if(gen!==recGen)return;
     if(e.error==='not-allowed'||e.error==='service-not-allowed'){
       listening=false;setMicUi();
       toast('เบราว์เซอร์ไม่อนุญาตให้ใช้ไมโครโฟน ตรวจสิทธิ์ไมค์ของหน้านี้ หรือพิมพ์ในช่องคำสั่งแทน');
     }else if(e.error==='network'){toast('ต้องต่อเน็ตเพื่อถอดเสียง (Chrome ส่งเสียงไปถอดเสียงบนเซิร์ฟเวอร์)');}
   };
-  rec.onend=()=>{
-    // เสียงที่ยังไม่ถูกสรุปเป็น final ตอนเซสชันถูกตัด ให้ใช้ค่านั้นแทนการทิ้ง (แก้ปัญหาฟังไม่ครบ)
-    if(pendingInterim){const t=pendingInterim;pendingInterim='';feedUtterance(t);}
-    if(listening)setTimeout(()=>{try{rec.start();}catch(_){}},60);else setMicUi();
+  r.onend=()=>{
+    if(gen!==recGen)return;
+    // เสียงที่ยังไม่ถูกสรุปเป็น final ตอนเซสชันถูกตัด ให้ใช้ค่านั้นแทนการทิ้ง
+    if(pendingInterim&&!micMuted()){const t=pendingInterim;pendingInterim='';feedUtterance(t);}
+    pendingInterim='';
+    if(listening)setTimeout(()=>{if(gen!==recGen||!listening)return;try{r.start();}catch(_){}},80);else setMicUi();
   };
   listening=true;setMicUi();
-  try{rec.start();}catch(_){}
+  try{r.start();}catch(_){}
 }
 /* กันประโยคซ้ำ: Chrome (โดยเฉพาะ Android) ส่ง final เดิมซ้ำ หรือส่งแบบสะสม (ข้อความเก่า + ข้อความใหม่) */
-let lastFinalIdx=-1,pendingInterim='',lastFed={t:'',at:0};
+let recGen=0,ttsUntil=0,lastFinalIdx=-1,pendingInterim='',lastFed={t:'',at:0};
+const micMuted=()=>Date.now()<ttsUntil||('speechSynthesis' in window&&speechSynthesis.speaking);
 function feedUtterance(raw){
   let t=normalize(raw||'');if(!t)return;
   const now=Date.now(),prev=lastFed.t,fresh=now-lastFed.at<1500;
@@ -1392,7 +1411,8 @@ function stageHtml(){
     </div>
     <p class="hint">ข้อมูลถูกซิงก์กับคลังข้อมูลกลาง เปิด HN นี้จากเครื่องไหนก็เห็นข้อมูลเดิม เหมาะกับการตรวจทีละโซนคนละวัน</p>
     <div class="acts"><button class="btn primary" data-a="go" data-st="2">ต่อไป: เลือก Phase และโซน</button>
-    <button class="btn warn" data-a="clearPatient" id="newpt">ล้างข้อมูลคนไข้นี้ทั้งหมด</button></div>`;}
+    <button class="btn warn" data-a="clearPatient" id="newpt">ล้างค่าที่ตรวจทั้งหมด (เก็บ HN ไว้)</button>
+    <button class="btn warn" data-a="deletePatient" id="delpt">ลบ HN นี้ออกจากระบบ</button></div>`;}
   case 2: return `<h2>2. เลือก Phase และตำแหน่ง</h2>
     <p class="hint">HN ${esc(state.hn||'-')} วันที่ ${fmtDateTh(ph.date)}</p>
     <div class="grp"><span>Phase</span><div class="seg">${PHASES.map(p=>`<button data-a="phase" data-ph="${p}" aria-pressed="${p===state.phase}">${p}</button>`).join('')}</div></div>
@@ -1755,12 +1775,12 @@ function exportData(){
   });
   return out;
 }
-let newptArmed=false,newptTimer=null;
+let newptArmed=false,newptTimer=null,delptArmed=false,delptTimer=null;
 function act(a,el){
   switch(a){
   case 'go': setStage(+el.dataset.st);break;
   case 'clearPatient':{
-    if(!newptArmed){newptArmed=true;el.textContent='กดอีกครั้งเพื่อยืนยันการล้างข้อมูลคนไข้นี้ทั้งหมด';newptTimer=setTimeout(()=>{newptArmed=false;el.textContent=session.patientRef?'ล้างข้อมูลคนไข้นี้ทั้งหมด':'เริ่มผู้ป่วยรายใหม่ (ล้างข้อมูลทั้งหมด)';},3500);return;}
+    if(!newptArmed){newptArmed=true;el.textContent=session.patientRef?'กดอีกครั้งเพื่อยืนยันการล้างค่าที่ตรวจทั้งหมด (HN ยังอยู่)':'กดอีกครั้งเพื่อยืนยันการล้างข้อมูลทั้งหมด';newptTimer=setTimeout(()=>{newptArmed=false;el.textContent=session.patientRef?'ล้างค่าที่ตรวจทั้งหมด (เก็บ HN ไว้)':'เริ่มผู้ป่วยรายใหม่ (ล้างข้อมูลทั้งหมด)';},3500);return;}
     clearTimeout(newptTimer);newptArmed=false;
     if(session.patientRef){
       state.phases=freshPhases();P().date=todayIso();
@@ -1769,6 +1789,27 @@ function act(a,el){
     }
     hist.length=0;sum.url=null;sum.blob=null;
     refreshAll();setStage(1);toast('ล้างข้อมูลแล้ว');save();break;}
+  case 'deletePatient':{
+    if(!session.patientRef)break;
+    if(!delptArmed){
+      delptArmed=true;el.textContent='กดอีกครั้งเพื่อยืนยันลบ HN '+state.hn+' ออกจากคลังข้อมูลกลาง (กู้คืนไม่ได้)';
+      delptTimer=setTimeout(()=>{delptArmed=false;el.textContent='ลบ HN นี้ออกจากระบบ';},4000);return;}
+    clearTimeout(delptTimer);delptArmed=false;
+    const hn=state.hn,ref=session.patientRef,cid=session.clinicId;
+    clearTimeout(saveTimer);clearTimeout(cloudSaveTimer);   // กันตัวบันทึกอัตโนมัติเขียนกลับหลังลบ
+    el.disabled=true;el.textContent='กำลังลบ...';
+    Promise.resolve().then(()=>ref.delete()).then(()=>{
+      try{localStorage.removeItem('perio-cache-'+cid+'-'+hnDocId(hn));}catch(_){}
+      session.hn='';session.patientRef=null;patientsCache=null;
+      state=defaultState();P().date=todayIso();
+      hist.length=0;sum.url=null;sum.blob=null;
+      setCloudSyncUi('idle');refreshPatients();refreshAll();setStage(1);
+      toast('ลบ HN '+hn+' ออกจากระบบแล้ว');
+    }).catch(err=>{
+      el.disabled=false;el.textContent='ลบ HN นี้ออกจากระบบ';
+      toast(permDenied(err)?'บัญชีนี้ไม่มีสิทธิ์ลบ HN ติดต่อผู้ดูแลระบบ':'ลบไม่สำเร็จ ลองใหม่อีกครั้ง');
+    });
+    break;}
   case 'signin': signInGoogle();break;
   case 'signout': signOutGoogle();break;
   case 'useOffline': cloudState='offline';setCloudSyncUi('offline');renderStage();break;
@@ -1855,18 +1896,26 @@ function bind(){
   document.getElementById('send').addEventListener('click',send);
   cmd.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send();}});
   document.getElementById('undo').addEventListener('click',()=>{const ok=undo();logAdd('(ปุ่ม)',ok?'ย้อนกลับ 1 ช่อง':'ไม่มีรายการให้ย้อน',!ok);});
+  let padLockUntil=0,lastPad={b:null,at:0};
   document.getElementById('numpad').addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b)return;
     const a=b.dataset.a;
+    const nowT=Date.now(),sig=()=>stage+'|'+cursor.q+'|'+cursor.param+'|'+cursor.surf;
+    if(nowT<padLockUntil)return;   // เพิ่งเปลี่ยนขั้น/โซน: ไม่รับปุ่มที่กดรัวต่อ กันค่าไปลงขั้นถัดไปโดยไม่ตั้งใจ
+    if((a==='numval'||a==='numprog')&&b===lastPad.b&&nowT-lastPad.at<150)return;   // กันกดซ้ำจากแตะเบิ้ล
+    if(a==='numval'||a==='numprog')lastPad={b,at:nowT};
+    const sig0=sig();
     if(a==='numprog'){
       if(!cursor.tooth||cursor.done){toast('เลือกซี่จากตารางก่อน');return;}
       const f=cursor.tooth;setProg(f,b.dataset.c);moveNextTooth();renderCursor();
       logAdd('(ปุ่ม)',`Prognosis ซี่ ${f} = ${b.dataset.c}`,false);
       if(cursor.done)afterSeqDone();
+      if(sig()!==sig0)padLockUntil=Date.now()+700;
     }else if(a==='numval'){
       if(cursor.param==='prog'){toast('ขั้นนี้ใช้ปุ่ม 1 ถึง 4 (F Q U H)');return;}
       const v=+b.dataset.v;
       const r=applyValues([v]);
+      if(sig()!==sig0)padLockUntil=Date.now()+700;
       if(r.applied.length){logAdd('(ปุ่มเลข)',`${PNAME[cursor.param]||''} ${v}`,false);say(String(v));}
       if(r.warn){toast(r.warn);logAdd('(ปุ่มเลข)',r.warn,true);}
     }else if(a==='numskip'){
