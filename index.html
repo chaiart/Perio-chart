@@ -129,22 +129,42 @@ textarea{width:100%;min-height:74px;resize:vertical}
 .heard b{color:var(--ink);font-weight:600}
 .heard .bad{color:var(--warn)}
 
-.numpad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:2px}
 .numbtn{min-height:52px;border:1px solid var(--line2);background:var(--surface);border-radius:12px;
   font:700 20px var(--mono);color:var(--ink)}
 .numbtn:active{background:var(--accent);color:var(--accent-ink)}
 .numbtn.wide{font-size:17px}
 .numbtn.neg{color:var(--warn);border-color:var(--warn);font-size:24px}
 .numbtn.neg.on{background:var(--warn);color:#fff}
-.numbtn.act{font:600 14px var(--font);grid-column:span 1}
+.numbtn.act{font:600 14px var(--font)}
 .numbtn.pgb{display:none;min-height:60px;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
 .numbtn.pgb b{font:700 20px var(--mono)}
 .numbtn.pgb small{font:500 11px var(--font);color:var(--muted)}
-.numpad[data-mode="prog"]{grid-template-columns:repeat(4,minmax(0,1fr))}
-.numpad[data-mode="prog"] .numbtn:not(.pgb):not(.act){display:none}
-.numpad[data-mode="prog"] .pgb{display:flex}
 .numpad[data-mode="none"]{display:none}
-@media (max-width:520px){.numpad{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* แป้นแบบโทรศัพท์: ตำแหน่ง 1-15 และ 0 เหมือนกันทุกแป้น RE มีคอลัมน์ค่าลบเพิ่มทางซ้าย */
+.numpad{display:grid;gap:6px;margin:0}
+.numpad .numbtn{display:none;min-width:0;padding:0}
+.numpad .numbtn.kneg{font:700 24px var(--font)}
+.numpad[data-mode="re"] .numbtn:not(.pgb),
+.numpad[data-mode="pd"] .numbtn:not(.pgb):not(.neg),
+.numpad[data-mode="small"] :is(.k0,.k1,.k2,.k3,.act),
+.numpad[data-mode="prog"] .act{display:block}
+.numpad[data-mode="prog"] .pgb{display:flex}
+.k0{grid-area:k0}.k1{grid-area:k1}.k2{grid-area:k2}.k3{grid-area:k3}.k4{grid-area:k4}.k5{grid-area:k5}.k6{grid-area:k6}.k7{grid-area:k7}
+.k8{grid-area:k8}.k9{grid-area:k9}.k10{grid-area:k10}.k11{grid-area:k11}.k12{grid-area:k12}.k13{grid-area:k13}.k14{grid-area:k14}.k15{grid-area:k15}
+.n1{grid-area:n1}.n2{grid-area:n2}.n3{grid-area:n3}.n4{grid-area:n4}.n5{grid-area:n5}.kneg{grid-area:neg}
+.kundo{grid-area:undo}.kskip{grid-area:skip}.kmiss{grid-area:miss}.kkb{grid-area:kb}.p1{grid-area:p1}.p2{grid-area:p2}.p3{grid-area:p3}.p4{grid-area:p4}
+.numpad[data-mode="re"]{grid-template-columns:repeat(5,minmax(0,1fr));grid-template-areas:
+  "n1 k1 k2 k3 undo" "n2 k4 k5 k6 undo" "n3 k7 k8 k9 skip" "n4 k10 k11 k12 miss" "n5 k13 k14 k15 kb" "neg k0 k0 k0 k0"}
+.numpad[data-mode="pd"]{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-areas:
+  "k1 k2 k3 undo" "k4 k5 k6 undo" "k7 k8 k9 skip" "k10 k11 k12 miss" "k13 k14 k15 kb" "k0 k0 k0 k0"}
+.numpad[data-mode="small"]{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-areas:
+  "k1 k2 k3 undo" "k0 k0 k0 skip" "miss miss kb kb"}
+.numpad[data-mode="prog"]{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-areas:"p1 p2 p3 p4" "miss skip undo kb"}
+/* รายการค่าที่เพิ่งบันทึก (แท็บเล็ต) */
+.recent{display:none;align-content:start;gap:5px;min-height:0;overflow-y:auto}
+.recent h4{margin:0 0 2px;font-size:13px}
+.recent button{display:block;width:100%;text-align:left;border:0;border-radius:7px;background:var(--bg);color:var(--muted);padding:5px 10px;font-size:13px;min-height:30px}
+.recent button:first-of-type{background:var(--cur-soft);color:var(--ink);font-weight:600}
 .legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--muted);margin:6px 2px 10px}
 .legend span{display:inline-flex;align-items:center;gap:7px}
 .legend svg{width:34px;height:12px}
@@ -237,33 +257,31 @@ body.exam .where{font:600 15px var(--font);padding:9px 12px;flex:1 1 auto}
 body.exam .lchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 body.exam .lchips::-webkit-scrollbar{display:none}
 body.exam .lchips .chip{min-height:34px;padding:4px 12px;font-size:13px;flex:none}
-body.exam .pad{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;border-width:1px 0 0;border-radius:16px 16px 0 0;
+body.exam .pad{grid-template-areas:"cmd" "heard" "num";position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;border-width:1px 0 0;border-radius:16px 16px 0 0;
   padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));gap:6px;box-shadow:0 -6px 20px rgba(10,30,40,.14)}
 body.exam .wrap{padding-bottom:calc(var(--padH,280px) + 24px)}
 body.exam #toast{bottom:calc(var(--padH,280px) + 12px)}
+body.exam .cmdbox{grid-area:cmd}body.exam .heard{grid-area:heard}body.exam .numpad{grid-area:num}body.exam .recent{grid-area:recent}
 body.exam .heard{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px}
-body.exam .numpad{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:0}
-body.exam .numbtn{min-height:46px}
-body.exam .numbtn.undo{grid-column:span 2}
-body.exam .numpad[data-mode="prog"]{grid-template-columns:repeat(4,minmax(0,1fr))}
-body.exam .numpad[data-mode="prog"] .numbtn.undo{grid-column:span 1}
+body.exam .numbtn{min-height:44px}
 @media (max-width:599px){.lab{flex-basis:44px}}
 @media (min-width:600px){
-  body.exam .pad{padding-left:16px;padding-right:16px}
-  body.exam .numpad{grid-template-columns:repeat(12,minmax(0,1fr))}
+  body.exam .pad{padding-left:16px;padding-right:16px;grid-template-columns:minmax(0,1fr) 440px;column-gap:20px;
+    grid-template-areas:"cmd cmd" "heard num" "recent num";grid-template-rows:auto auto 1fr}
+  body.exam .recent{display:grid}
+  body.exam .numpad{gap:7px}
   body.exam .numbtn{min-height:54px}
 }
 @media (min-width:900px) and (orientation:landscape){
   body.exam{padding-right:340px}
   body.exam .wrap{padding-bottom:48px}
   body.exam #toast{bottom:calc(20px + env(safe-area-inset-bottom,0px));left:calc(50% - 170px)}
-  body.exam .pad{left:auto;top:0;width:340px;border-width:0 0 0 1px;border-radius:0;align-content:start;overflow-y:auto;
+  body.exam .pad{grid-template-columns:1fr;grid-template-areas:"heard" "cmd" "num" "recent";grid-template-rows:auto auto auto 1fr;
+    left:auto;top:0;width:340px;border-width:0 0 0 1px;border-radius:0;align-content:start;overflow-y:auto;
     padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:-6px 0 20px rgba(10,30,40,.10)}
-  body.exam .heard{white-space:normal;font-size:13px}
-  body.exam .numpad{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  body.exam .heard{white-space:normal;font-size:13px;background:var(--cur-soft);border-radius:8px;padding:6px 10px;color:var(--ink)}
+  body.exam .numpad{gap:8px}
   body.exam .numbtn{min-height:60px}
-  body.exam .numbtn.kb{order:1}
-  body.exam .numbtn.act:not(.kb){order:2}
 }
 @media (max-width:700px){
   .wrap{padding:0 10px 40px}
@@ -313,35 +331,39 @@ body.exam .numpad[data-mode="prog"] .numbtn.undo{grid-column:span 1}
     <button class="btn" id="send" type="button">ส่ง</button>
   </div>
   <div class="heard" id="heard">เลือกโซนและขั้นตอน แล้วกดเริ่มฟัง หรือกดช่องในตารางเพื่อเริ่มจากช่องนั้น</div>
-  <div class="numpad" id="numpad">
-    <button class="numbtn pgb" data-a="numprog" data-c="F"><b>1 F</b><small>Favourable</small></button>
-    <button class="numbtn pgb" data-a="numprog" data-c="Q"><b>2 Q</b><small>Questionable</small></button>
-    <button class="numbtn pgb" data-a="numprog" data-c="U"><b>3 U</b><small>Unfavourable</small></button>
-    <button class="numbtn pgb" data-a="numprog" data-c="H"><b>4 H</b><small>Hopeless</small></button>
-    <button class="numbtn" data-a="numval" data-v="0">0</button>
-    <button class="numbtn" data-a="numval" data-v="1">1</button>
-    <button class="numbtn" data-a="numval" data-v="2">2</button>
-    <button class="numbtn" data-a="numval" data-v="3">3</button>
-    <button class="numbtn" data-a="numval" data-v="4">4</button>
-    <button class="numbtn" data-a="numval" data-v="5">5</button>
-    <button class="numbtn" data-a="numval" data-v="6">6</button>
-    <button class="numbtn" data-a="numval" data-v="7">7</button>
-    <button class="numbtn" data-a="numval" data-v="8">8</button>
-    <button class="numbtn" data-a="numval" data-v="9">9</button>
-    <button class="numbtn wide" data-a="numval" data-v="10">10</button>
-    <button class="numbtn wide" data-a="numval" data-v="11">11</button>
-    <button class="numbtn wide" data-a="numval" data-v="12">12</button>
-    <button class="numbtn wide" data-a="numval" data-v="13">13</button>
-    <button class="numbtn wide" data-a="numval" data-v="14">14</button>
-    <button class="numbtn wide" data-a="numval" data-v="15">15</button>
-    <button class="numbtn neg" data-a="numval" data-v="-1">-1</button>
-    <button class="numbtn neg" data-a="numval" data-v="-2">-2</button>
-    <button class="numbtn neg" data-a="numneg" id="negBtn" aria-pressed="false" title="กดแล้วตามด้วยตัวเลข เพื่อใส่ค่าติดลบ">−</button>
-    <button class="numbtn act" data-a="nummiss">ฟันหาย</button>
-    <button class="numbtn act" data-a="numskip">ข้าม</button>
-    <button class="numbtn act undo" data-a="numundo">ย้อนกลับ</button>
-    <button class="numbtn act kb" data-a="numkb" id="kbBtn" aria-label="พิมพ์ด้วยคีย์บอร์ด" aria-pressed="false">⌨</button>
+  <div class="numpad" id="numpad" data-mode="none">
+    <button class="numbtn pgb p1" data-a="numprog" data-c="F"><b>1 F</b><small>Favourable</small></button>
+    <button class="numbtn pgb p2" data-a="numprog" data-c="Q"><b>2 Q</b><small>Questionable</small></button>
+    <button class="numbtn pgb p3" data-a="numprog" data-c="U"><b>3 U</b><small>Unfavourable</small></button>
+    <button class="numbtn pgb p4" data-a="numprog" data-c="H"><b>4 H</b><small>Hopeless</small></button>
+    <button class="numbtn k1" data-a="numval" data-v="1">1</button>
+    <button class="numbtn k2" data-a="numval" data-v="2">2</button>
+    <button class="numbtn k3" data-a="numval" data-v="3">3</button>
+    <button class="numbtn k4" data-a="numval" data-v="4">4</button>
+    <button class="numbtn k5" data-a="numval" data-v="5">5</button>
+    <button class="numbtn k6" data-a="numval" data-v="6">6</button>
+    <button class="numbtn k7" data-a="numval" data-v="7">7</button>
+    <button class="numbtn k8" data-a="numval" data-v="8">8</button>
+    <button class="numbtn k9" data-a="numval" data-v="9">9</button>
+    <button class="numbtn wide k10" data-a="numval" data-v="10">10</button>
+    <button class="numbtn wide k11" data-a="numval" data-v="11">11</button>
+    <button class="numbtn wide k12" data-a="numval" data-v="12">12</button>
+    <button class="numbtn wide k13" data-a="numval" data-v="13">13</button>
+    <button class="numbtn wide k14" data-a="numval" data-v="14">14</button>
+    <button class="numbtn wide k15" data-a="numval" data-v="15">15</button>
+    <button class="numbtn k0" data-a="numval" data-v="0">0</button>
+    <button class="numbtn neg n1" data-a="numval" data-v="-1">-1</button>
+    <button class="numbtn neg n2" data-a="numval" data-v="-2">-2</button>
+    <button class="numbtn neg n3" data-a="numval" data-v="-3">-3</button>
+    <button class="numbtn neg n4" data-a="numval" data-v="-4">-4</button>
+    <button class="numbtn neg n5" data-a="numval" data-v="-5">-5</button>
+    <button class="numbtn neg kneg" data-a="numneg" id="negBtn" aria-pressed="false" title="กดแล้วตามด้วยตัวเลข สำหรับค่าลบเกิน -5">−</button>
+    <button class="numbtn act kundo" data-a="numundo">ย้อนกลับ</button>
+    <button class="numbtn act kskip" data-a="numskip">ข้าม</button>
+    <button class="numbtn act kmiss" data-a="nummiss">ฟันหาย</button>
+    <button class="numbtn act kb kkb" data-a="numkb" id="kbBtn" aria-label="พิมพ์ด้วยคีย์บอร์ด" aria-pressed="false">⌨</button>
   </div>
+  <div class="recent" id="recent"></div>
 </div>
 
 <div class="legend">
@@ -374,7 +396,7 @@ body.exam .numpad[data-mode="prog"] .numbtn.undo{grid-column:span 1}
       <label class="f">ภาษาที่ไมค์ฟัง
         <select id="lang"><option value="th-TH">ไทย</option><option value="en-US">English</option></select></label>
       <label class="f">เลขสองหลักติดกัน (เช่น 12)
-        <select id="twoDigit"><option value="split">แยกเป็น 1 กับ 2</option><option value="join">รวมเป็นสิบสอง</option></select></label>
+        <select id="twoDigit"><option value="auto">อัตโนมัติ: 10 ถึง 15 นับเป็นเลขเดียว (แนะนำ)</option><option value="split">แยกทีละหลักเสมอ</option></select></label>
       <label class="f">อ่านค่าทวนหลังบันทึก
         <select id="tts"><option value="0">ปิด</option><option value="1">เปิด</option></select></label>
     </div>
@@ -436,7 +458,7 @@ const midOrder=q=>QT[q].slice().sort((a,b)=>(a%10)-(b%10));   // จากซี
 
 /* ==================== ตัวอ่านคำพูด ==================== */
 // ==PARSER-START==
-const settings={lang:'th-TH',twoDigit:'split',tts:false};
+const settings={lang:'th-TH',twoDigit:'auto',tts:false};
 const DW={'ศูนย์':0,'ซีโร่':0,'ซีโร':0,'หนึ่ง':1,'เอ็ด':1,'สอง':2,'ยี่':2,'สาม':3,'สี่':4,'ห้า':5,'หก':6,'เจ็ด':7,'แปด':8,'เก้า':9,
   'zero':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,'ten':10,'eleven':11,'twelve':12};
 const TOKSRC='ศูนย์|ซีโร่|ซีโร|หนึ่ง|เอ็ด|สอง|ยี่|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า|สิบ|zero|one|two|three|four|five|six|seven|eight|nine|eleven|twelve|ten|\\d+|ลบ|minus|negative|(?<!\\d)-(?=\\d)';
@@ -446,10 +468,25 @@ function normalize(t){
     .replace(/[๐-๙]/g,d=>'๐๑๒๓๔๕๖๗๘๙'.indexOf(d))
     .replace(/[,;!?]/g,' ').replace(/\s+/g,' ').trim();
 }
+/* เลขที่ระบบถอดเสียงมาติดกัน เช่น "323" หรือ "10"
+   - ช่องที่ค่าไม่เกิน 9 (Mo, F, Prognosis): แยกทีละหลักเสมอ
+   - PD และ MGJ: "1" ตามด้วย 0-5 คือ 10-15 (PD 1 กับ 0 แทบไม่เกิดจริง) เช่น "10"=10, "3113"=3 11 3
+   - RE: รวมเฉพาะกรณีพูด 10-15 เป็นคำเดียว ("10" อยู่ลำพัง) ถ้าติดกับเลขอื่นให้แยก เพราะ RE 1 และ 0 เจอบ่อย */
 function splitDigits(run,tens){
   if(tens) return [parseInt(run,10)];
   if(run.length===1) return [+run];
-  if(run.length===2 && settings.twoDigit==='join' && +run>=10 && +run<=15) return [+run];
+  const p=(typeof cursor!=='undefined'&&cursor)?cursor.param:'';
+  if(settings.twoDigit!=='split'&&(p==='pd'||p==='mgj'||p==='re')){
+    if(run.length===2&&+run>=10&&+run<=15) return [+run];
+    if(p!=='re'){
+      const out=[];
+      for(let i=0;i<run.length;i++){
+        if(run[i]==='1'&&i+1<run.length&&run[i+1]<='5'){out.push(10+ +run[i+1]);i++;}
+        else out.push(+run[i]);
+      }
+      return out;
+    }
+  }
   return run.split('').map(Number);
 }
 function scanNumbers(s,opt){
@@ -1164,15 +1201,32 @@ function say(txt){
 }
 
 /* ==================== การแก้ไขข้อมูล ==================== */
+/* รายการค่าที่เพิ่งบันทึก แตะเพื่อกลับไปแก้ช่องนั้น */
+const recent=[];let recentId=0;
+function recentLabel(e){
+  let w=`ซี่ ${e.f}`;
+  if(e.param==='re'||e.param==='pd')w+=` ${({D:'D',C:'กลาง',M:'M'})[SITELAB[quadOf(e.f)][e.site]]}`+(e.surf==='L'?' (ลิ้น)':'');
+  if(e.param==='fu')w+=` ${e.a}F`;
+  if(e.param==='mgj')w+=' MGJ';
+  return `${w} ${e.param==='fu'||e.param==='mgj'?'':PNAME[e.param]+' '}= ${e.v}`;
+}
+function recentAdd(e){e.id=++recentId;recent.unshift(e);if(recent.length>12)recent.pop();renderRecent();return e.id;}
+function recentRemove(id){const i=recent.findIndex(x=>x.id===id);if(i>=0){recent.splice(i,1);renderRecent();}}
+function renderRecent(){
+  const el=document.getElementById('recent');if(!el)return;
+  el.innerHTML=recent.length?'<h4>บันทึกล่าสุด</h4>'+recent.map(e=>`<button type="button" data-rid="${e.id}">${esc(recentLabel(e))}</button>`).join(''):'';
+}
 function pushHist(fn){hist.push(fn);if(hist.length>800)hist.shift();}
 function setCell(f,surf,param,site,v){
   const prev=getV(f,surf,param,site);
   const snap={...cursor,tooth:f,site,done:false,q:quadOf(f)};
   putV(f,surf,param,site,String(v));
+  const rid=recentAdd({f,surf,param,site,v:String(v)});
   refreshCell(f,surf,param,site);
   if(param==='pd'||param==='re'){redraw(archOf(f),surf);refreshCalCell(f,surf,site);}
   if(param==='mgj'||param==='fu')refreshOptsView();
   pushHist(()=>{
+    recentRemove(rid);
     putV(f,surf,param,site,prev);refreshCell(f,surf,param,site);
     if(param==='pd'||param==='re'){redraw(archOf(f),surf);refreshCalCell(f,surf,site);}
     Object.assign(cursor,snap);renderCursor();refreshStats();save();
@@ -1183,7 +1237,8 @@ function setFu(f,a,v){
   const prev=T(f).fu[a];
   const snap={...cursor,tooth:f,site:0,done:false,q:quadOf(f)};
   T(f).fu[a]=String(v);refreshCell(f,null,'fu',0);refreshOptsView();
-  pushHist(()=>{T(f).fu[a]=prev;refreshCell(f,null,'fu',0);Object.assign(cursor,snap);renderCursor();save();});
+  const rid=recentAdd({f,param:'fu',a,site:fuSites(f).indexOf(a),v:String(v)});
+  pushHist(()=>{recentRemove(rid);T(f).fu[a]=prev;refreshCell(f,null,'fu',0);Object.assign(cursor,snap);renderCursor();save();});
   save();
 }
 const PSEV={F:0,Q:1,U:2,H:3};
@@ -1211,7 +1266,8 @@ function setProg(f,c){
   const prev=T(f).prog;
   const snap={...cursor,tooth:f,site:0,done:false,q:quadOf(f),param:'prog'};
   T(f).prog=c;refreshCell(f,null,'prog',0);
-  pushHist(()=>{T(f).prog=prev;refreshCell(f,null,'prog',0);Object.assign(cursor,snap);renderCursor();save();});
+  const rid=recentAdd({f,param:'prog',site:0,v:c});
+  pushHist(()=>{recentRemove(rid);T(f).prog=prev;refreshCell(f,null,'prog',0);Object.assign(cursor,snap);renderCursor();save();});
   save();
 }
 function moveNextTooth(){
@@ -1355,7 +1411,7 @@ function startListening(){
   // ปิดตัวฟังเก่าให้หมดก่อน กันมีตัวฟังซ้อนกัน 2 ตัวแล้วส่งข้อมูลซ้ำ
   if(rec){try{rec.onresult=rec.onend=rec.onerror=rec.onstart=null;rec.abort();}catch(_){}rec=null;}
   const gen=++recGen,r=new SR();rec=r;
-  r.lang=settings.lang;r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+  r.lang=settings.lang;r.continuous=!MOBILE_SR;r.interimResults=true;r.maxAlternatives=1;
   lastFinalIdx=-1;pendingInterim='';
   r.onstart=()=>{if(gen!==recGen)return;lastFinalIdx=-1;pendingInterim='';};
   r.onresult=e=>{
@@ -1393,19 +1449,15 @@ function startListening(){
 }
 /* กันประโยคซ้ำ: Chrome (โดยเฉพาะ Android) ส่ง final เดิมซ้ำ หรือส่งแบบสะสม (ข้อความเก่า + ข้อความใหม่) */
 let recGen=0,ttsUntil=0,lastFinalIdx=-1,pendingInterim='',lastFed={t:'',at:0};
+/* มือถือ/แท็บเล็ต: โหมดฟังต่อเนื่องของ Chrome Android และ Safari ส่งผลซ้ำหรือส่งข้อความสะสม (เก่า+ใหม่)
+   จึงฟังทีละประโยคแล้วเริ่มฟังใหม่อัตโนมัติแทน ผลแต่ละครั้งเป็นอิสระต่อกัน ไม่มีข้อความเก่าปนมา */
+const MOBILE_SR=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
 const micMuted=()=>Date.now()<ttsUntil||('speechSynthesis' in window&&speechSynthesis.speaking);
 function feedUtterance(raw){
   let t=normalize(raw||'');if(!t)return;
-  const now=Date.now(),prev=lastFed.t,fresh=now-lastFed.at<1500;
-  if(fresh&&prev){
-    if(t===prev){return;}                                   // ซ้ำเป๊ะ
-    if(t.startsWith(prev+' ')||(/^[\d\s-]+$/.test(t)&&t.replace(/\s/g,'').startsWith(prev.replace(/\s/g,''))&&t.length>prev.length)){
-      const rest=t.slice(prev.length).trim();               // สะสม: เอาเฉพาะส่วนที่เพิ่มมา
-      lastFed={t,at:now};
-      if(rest)handleUtterance(rest);
-      return;
-    }
-  }
+  const now=Date.now();
+  // ผลเดิมถูกส่งซ้ำติดกันภายในเสี้ยววินาที (บั๊กของเบราว์เซอร์) ทิ้ง; ถ้าห่างกว่านี้ถือว่าผู้ใช้พูดซ้ำจริง เช่น 3 แล้ว 3
+  if(t===lastFed.t&&now-lastFed.at<700){lastFed.at=now;return;}
   lastFed={t,at:now};
   handleUtterance(raw);
 }
@@ -1577,7 +1629,7 @@ function renderStage(){
 }
 function updateStageLive(){
   const np=document.getElementById('numpad');
-  if(np)np.dataset.mode=stage!==4?'none':(cursor.param==='prog'?'prog':'num');
+  if(np)np.dataset.mode=stage!==4?'none':({prog:'prog',re:'re',pd:'pd',mgj:'pd',mo:'small',fu:'small'}[cursor.param]||'pd');
   const t=document.getElementById('progTooth');
   if(t&&cursor.tooth)t.textContent=cursor.tooth;
   if(stage===4){
@@ -2007,6 +2059,14 @@ function bind(){
   const send=()=>{handleUtterance(cmd.value);cmd.value='';cmd.focus();};
   document.getElementById('send').addEventListener('click',send);
   cmd.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send();}});
+  document.getElementById('recent').addEventListener('click',e=>{
+    const b=e.target.closest('[data-rid]');if(!b)return;
+    const it=recent.find(x=>x.id===+b.dataset.rid);if(!it||T(it.f).missing)return;
+    closeTyping();
+    cursor.param=it.param;cursor.q=quadOf(it.f);if(it.surf)cursor.surf=it.surf;
+    cursor.tooth=it.f;cursor.site=Math.max(0,it.site||0);cursor.done=false;
+    renderStage();renderCursor();toast(`แก้ ${recentLabel(it).split(' =')[0]}`);
+  });
   document.getElementById('lchips').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b)act(b.dataset.a,b);});
   {const pad=document.getElementById('pad');const setH=()=>document.documentElement.style.setProperty('--padH',pad.offsetHeight+'px');
    if(window.ResizeObserver)new ResizeObserver(setH).observe(pad);window.addEventListener('resize',setH);setH();}
